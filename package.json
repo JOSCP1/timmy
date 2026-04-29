@@ -1,0 +1,14 @@
+{
+  "name": "olysec",
+  "version": "1.0.0",
+  "description": "OLYSEC – Threat Modeling & Product Security Risk Management",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "license": "Apache-2.0"
+}

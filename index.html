@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OLYSEC – Threat & Risk Management</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ═══ HEADER ════════════════════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="logo">
+    <span class="logo-icon">⬡</span>
+    <span class="logo-text">OLY<strong>SEC</strong></span>
+  </div>
+  <div class="header-center">
+    <input id="projectName" type="text" placeholder="Untitled Project" class="project-name-input" />
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="App.save()">💾 Save</button>
+    <button class="btn btn-ghost" onclick="App.load()">📂 Open</button>
+    <input id="fileInput" type="file" accept=".json" style="display:none" onchange="App.handleFileLoad(event)" />
+  </div>
+</header>
+
+<!-- ═══ SHELL ══════════════════════════════════════════════════════════════ -->
+<div class="app-shell">
+
+  <!-- ── Sidebar ── -->
+  <nav class="sidebar">
+    <ul class="nav-list">
+      <li class="nav-item active" data-view="threat-modeler" onclick="App.switchView('threat-modeler')">
+        <span class="nav-icon">🗺️</span><span class="nav-label">Threat Modeler</span>
+      </li>
+      <li class="nav-item" data-view="assets" onclick="App.switchView('assets')">
+        <span class="nav-icon">📦</span><span class="nav-label">Assets</span>
+        <span class="badge" id="assetsBadge">0</span>
+      </li>
+      <li class="nav-item" data-view="vuln-mgmt" onclick="App.switchView('vuln-mgmt')">
+        <span class="nav-icon">🛡️</span><span class="nav-label">Vulnerability Management</span>
+        <span class="badge badge-red" id="vulnBadge">0</span>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="version">v1.0.0</div>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ── -->
+  <main class="main-content">
+
+    <!-- ══ THREAT MODELER VIEW ════════════════════════════════════════════ -->
+    <section class="view active" id="view-threat-modeler">
+      <div class="view-header">
+        <h2>Threat Modeler</h2>
+        <div class="toolbar-group">
+          <!-- Tool selector -->
+          <div class="tool-group" id="toolGroup">
+            <button class="tool-btn active" data-tool="select"    title="Select / Move (V)">↖</button>
+            <button class="tool-btn"         data-tool="process"  title="Process – Circle (P)">◯</button>
+            <button class="tool-btn"         data-tool="store"    title="Data Store – Bars (S)">▬</button>
+            <button class="tool-btn"         data-tool="dataflow" title="Data Flow – Arrow (F)">→</button>
+            <button class="tool-btn"         data-tool="trustzone"title="Trust Zone – Dashed (T)">⬜</button>
+          </div>
+          <div class="sep"></div>
+          <button class="btn btn-ghost btn-sm" onclick="Diagram.deleteSelected()">🗑 Delete</button>
+          <button class="btn btn-ghost btn-sm" onclick="Diagram.zoomIn()">🔍+</button>
+          <button class="btn btn-ghost btn-sm" onclick="Diagram.zoomOut()">🔍−</button>
+          <button class="btn btn-ghost btn-sm" onclick="Diagram.resetView()">⌂</button>
+          <div class="sep"></div>
+          <button class="btn btn-primary" onclick="Threats.identify()">⚡ Identify Threats</button>
+        </div>
+      </div>
+
+      <div class="diagram-workspace">
+        <!-- SVG Canvas -->
+        <div class="canvas-wrap" id="canvasWrap">
+          <svg id="diagramSvg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" class="arrowhead" />
+              </marker>
+              <marker id="arrowSel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
+              </marker>
+            </defs>
+            <g id="layerTrustZones"></g>
+            <g id="layerConnections"></g>
+            <g id="layerElements"></g>
+            <g id="layerTemp"></g>
+          </svg>
+        </div>
+
+        <!-- Properties Panel -->
+        <aside class="props-panel" id="propsPanel">
+          <div class="props-header">Properties</div>
+          <div id="propsContent" class="props-body">
+            <p class="props-hint">Select an element to edit its properties.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ══ ASSETS VIEW ════════════════════════════════════════════════════ -->
+    <section class="view" id="view-assets">
+      <div class="view-header">
+        <h2>Assets</h2>
+        <div class="toolbar-group">
+          <input type="text" id="assetSearch" placeholder="Search assets…" class="search-input" oninput="Assets.filter(this.value)" />
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="assetsTable">
+          <thead>
+            <tr>
+              <th>Name</th><th>Type</th>
+              <th>Confidentiality</th><th>Integrity</th><th>Availability</th>
+              <th>Threats</th>
+            </tr>
+          </thead>
+          <tbody id="assetsTbody"></tbody>
+        </table>
+        <div class="table-empty" id="assetsEmpty">No assets yet. Add elements in the Threat Modeler.</div>
+      </div>
+    </section>
+
+    <!-- ══ VULNERABILITY MANAGEMENT VIEW ═════════════════════════════════ -->
+    <section class="view" id="view-vuln-mgmt">
+      <div class="view-header">
+        <h2>Vulnerability Management</h2>
+        <div class="toolbar-group">
+          <button class="btn btn-ghost btn-sm" onclick="VulnMgmt.addManual()">+ Add Manual</button>
+          <select id="vulnFilter" onchange="VulnMgmt.filter(this.value)" class="filter-select">
+            <option value="">All Statuses</option>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Mitigated">Mitigated</option>
+            <option value="Accepted">Accepted</option>
+          </select>
+          <button class="btn btn-secondary" onclick="Report.exportXML()">📄 Export XML</button>
+        </div>
+      </div>
+
+      <div class="vuln-list" id="vulnList">
+        <div class="table-empty" id="vulnEmpty">No vulnerabilities yet. Run "Identify Threats" in the Threat Modeler.</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══ MODALS ═════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="App.closeModal()"></div>
+<div class="modal" id="modal">
+  <div class="modal-header"><h3 id="modalTitle"></h3><button class="modal-close" onclick="App.closeModal()">✕</button></div>
+  <div class="modal-body" id="modalBody"></div>
+  <div class="modal-footer" id="modalFooter"></div>
+</div>
+
+<!-- ═══ TOAST ══════════════════════════════════════════════════════════════ -->
+<div id="toast" class="toast"></div>
+
+<!-- ═══ SCRIPTS ═══════════════════════════════════════════════════════════ -->
+<script src="js/storage.js"></script>
+<script src="js/cvss4.js"></script>
+<script src="js/diagram.js"></script>
+<script src="js/assets.js"></script>
+<script src="js/threats.js"></script>
+<script src="js/vulnmgmt.js"></script>
+<script src="js/report.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
