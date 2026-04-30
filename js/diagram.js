@@ -517,7 +517,12 @@ const Diagram = (() => {
   function getElements()    { return elements; }
   function getConnections() { return connections; }
 
+  function focusElement(id) {
+    if (elements.find(e => e.id === id))    selectElement(id);
+    else if (connections.find(c => c.id === id)) selectConn(id);
+  }
+
   return { init, getData, setData, getAllAssets, getElements, getConnections,
            deleteSelected, updateProp, updateCIA, updateConnProp, updateConnCIA,
-           zoomIn, zoomOut, resetView, exportSVG };
+           zoomIn, zoomOut, resetView, exportSVG, focusElement };
 })();

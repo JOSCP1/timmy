@@ -239,6 +239,16 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
 .score-label { font-size: 13px; color: var(--c-muted); }
 .vuln-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
 
+/* Affected item link in vuln card */
+.affected-item-link {
+  display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+  color: var(--c-primary); font-size: 13px; font-weight: 500;
+  padding: 5px 8px; border: 1px solid var(--c-border); border-radius: 4px;
+  background: #f8fafc; transition: background .12s, border-color .12s;
+}
+.affected-item-link:hover { background: #eff6ff; border-color: var(--c-primary); }
+.affected-item-none { font-size: 13px; color: var(--c-muted); padding: 5px 0; display: inline-block; }
+
 /* Filters */
 .filter-select, .search-input {
   padding: 5px 10px; border: 1px solid var(--c-border); border-radius: 4px;

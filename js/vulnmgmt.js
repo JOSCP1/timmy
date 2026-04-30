@@ -65,6 +65,9 @@ const VulnMgmt = (() => {
       `<option value="${ai.id}">${esc(ai.name)}</option>`
     ).join('');
 
+    const assetIndex = {};
+    Diagram.getAllAssets().forEach(a => { assetIndex[a.id] = a; });
+
     shown.forEach(v => {
       const q     = CVSS4.qualitative(v.cvssScore);
       const score = `<span class="score-badge ${q.cls}">${v.cvssScore||'—'}</span>`;
@@ -92,6 +95,15 @@ const VulnMgmt = (() => {
                 <label>Risk Name</label>
                 <input type="text" value="${esc(v.name)}" onchange="VulnMgmt.update('${v.id}','name',this.value)" />
               </div>
+              ${(() => {
+                const a = assetIndex[v.assetId];
+                if (!a) return `<div class="form-field full"><label>Affected Item</label><span class="affected-item-none">${esc(v.assetName||'Manual Entry')}</span></div>`;
+                return `<div class="form-field full"><label>Affected Item</label>
+                  <a class="affected-item-link" href="#"
+                    onclick="App.switchView('threat-modeler');Diagram.focusElement('${a.id}');return false;">
+                    <span class="id-chip">${esc(a.tmId)}</span> ${esc(a.name)}
+                  </a></div>`;
+              })()}
               <div class="form-field full">
                 <label>Description</label>
                 <textarea onchange="VulnMgmt.update('${v.id}','description',this.value)">${esc(v.description)}</textarea>
