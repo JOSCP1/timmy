@@ -38,13 +38,14 @@
         <span class="badge" id="assetsBadge">0</span>
       </li>
       <li class="nav-item" data-view="vuln-mgmt" onclick="App.switchView('vuln-mgmt')">
-        <span class="nav-icon">🛡️</span><span class="nav-label">Vulnerability Management</span>
+        <span class="nav-icon">🛡️</span><span class="nav-label">Risk Assessment</span>
         <span class="badge badge-red" id="vulnBadge">0</span>
       </li>
+      <li class="nav-item" data-view="adversal" onclick="App.switchView('adversal')">
+        <span class="nav-icon">⚠️</span><span class="nav-label">Adversal Impact</span>
+      </li>
     </ul>
-    <div class="sidebar-footer">
-      <div class="version">v1.0.0</div>
-    </div>
+    <div class="sidebar-footer"><div class="version">v1.0.0</div></div>
   </nav>
 
   <!-- ── Main Content ── -->
@@ -55,13 +56,12 @@
       <div class="view-header">
         <h2>Threat Modeler</h2>
         <div class="toolbar-group">
-          <!-- Tool selector -->
           <div class="tool-group" id="toolGroup">
-            <button class="tool-btn active" data-tool="select"    title="Select / Move (V)">↖</button>
-            <button class="tool-btn"         data-tool="process"  title="Process – Circle (P)">◯</button>
-            <button class="tool-btn"         data-tool="store"    title="Data Store – Bars (S)">▬</button>
-            <button class="tool-btn"         data-tool="dataflow" title="Data Flow – Arrow (F)">→</button>
-            <button class="tool-btn"         data-tool="trustzone"title="Trust Zone – Dashed (T)">⬜</button>
+            <button class="tool-btn active" data-tool="select"     title="Select / Move (V)">↖</button>
+            <button class="tool-btn"         data-tool="process"   title="Process – Circle (P)">◯</button>
+            <button class="tool-btn"         data-tool="store"     title="Data Store – Bars (S)">▬</button>
+            <button class="tool-btn"         data-tool="dataflow"  title="Data Flow – Arrow (F)">→</button>
+            <button class="tool-btn"         data-tool="trustzone" title="Trust Zone – Dashed (T)">⬜</button>
           </div>
           <div class="sep"></div>
           <button class="btn btn-ghost btn-sm" onclick="Diagram.deleteSelected()">🗑 Delete</button>
@@ -69,12 +69,12 @@
           <button class="btn btn-ghost btn-sm" onclick="Diagram.zoomOut()">🔍−</button>
           <button class="btn btn-ghost btn-sm" onclick="Diagram.resetView()">⌂</button>
           <div class="sep"></div>
+          <button class="btn btn-ghost btn-sm" onclick="Diagram.exportSVG()">📐 Export Model</button>
           <button class="btn btn-primary" onclick="Threats.identify()">⚡ Identify Threats</button>
         </div>
       </div>
 
       <div class="diagram-workspace">
-        <!-- SVG Canvas -->
         <div class="canvas-wrap" id="canvasWrap">
           <svg id="diagramSvg" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -91,8 +91,6 @@
             <g id="layerTemp"></g>
           </svg>
         </div>
-
-        <!-- Properties Panel -->
         <aside class="props-panel" id="propsPanel">
           <div class="props-header">Properties</div>
           <div id="propsContent" class="props-body">
@@ -107,16 +105,24 @@
       <div class="view-header">
         <h2>Assets</h2>
         <div class="toolbar-group">
-          <input type="text" id="assetSearch" placeholder="Search assets…" class="search-input" oninput="Assets.filter(this.value)" />
+          <input type="text" id="assetSearch" placeholder="Search…" class="search-input"
+            oninput="Assets.search(this.value)" style="width:160px" />
+          <select class="filter-select" onchange="Assets.filter(this.value)">
+            <option value="">All Types</option>
+            <option value="process">Process</option>
+            <option value="store">Store</option>
+            <option value="dataflow">Data Flow</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="Assets.exportCSV()">⬇ Export CSV</button>
         </div>
       </div>
       <div class="table-wrap">
         <table class="data-table" id="assetsTable">
           <thead>
             <tr>
-              <th>Name</th><th>Type</th>
-              <th>Confidentiality</th><th>Integrity</th><th>Availability</th>
-              <th>Threats</th>
+              <th>ID</th><th>Name</th><th>Type</th>
+              <th>C</th><th>I</th><th>A</th>
+              <th>Risks</th><th>Order</th>
             </tr>
           </thead>
           <tbody id="assetsTbody"></tbody>
@@ -125,12 +131,12 @@
       </div>
     </section>
 
-    <!-- ══ VULNERABILITY MANAGEMENT VIEW ═════════════════════════════════ -->
+    <!-- ══ RISK ASSESSMENT VIEW ═══════════════════════════════════════════ -->
     <section class="view" id="view-vuln-mgmt">
       <div class="view-header">
-        <h2>Vulnerability Management</h2>
+        <h2>Risk Assessment</h2>
         <div class="toolbar-group">
-          <button class="btn btn-ghost btn-sm" onclick="VulnMgmt.addManual()">+ Add Manual</button>
+          <button class="btn btn-primary btn-sm" onclick="VulnMgmt.addManual()">+ Add Manual</button>
           <select id="vulnFilter" onchange="VulnMgmt.filter(this.value)" class="filter-select">
             <option value="">All Statuses</option>
             <option value="Open">Open</option>
@@ -141,30 +147,41 @@
           <button class="btn btn-secondary" onclick="Report.exportXML()">📄 Export XML</button>
         </div>
       </div>
-
       <div class="vuln-list" id="vulnList">
-        <div class="table-empty" id="vulnEmpty">No vulnerabilities yet. Run "Identify Threats" in the Threat Modeler.</div>
+        <div class="table-empty" id="vulnEmpty">No risks yet. Run "Identify Threats" or click "+ Add Manual".</div>
+      </div>
+    </section>
+
+    <!-- ══ ADVERSAL IMPACT VIEW ═══════════════════════════════════════════ -->
+    <section class="view" id="view-adversal">
+      <div class="view-header">
+        <h2>Adversal Impact</h2>
+        <div class="toolbar-group">
+          <button class="btn btn-primary" onclick="Adversal.add()">+ Add Impact</button>
+        </div>
+      </div>
+      <div class="adversal-list" id="adversalList">
+        <div class="table-empty" id="adversalEmpty">No adversal impacts defined. Click "+ Add Impact" to create one.</div>
       </div>
     </section>
 
   </main>
 </div>
 
-<!-- ═══ MODALS ═════════════════════════════════════════════════════════════ -->
+<!-- ═══ MODALS / TOAST ════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modalOverlay" onclick="App.closeModal()"></div>
 <div class="modal" id="modal">
   <div class="modal-header"><h3 id="modalTitle"></h3><button class="modal-close" onclick="App.closeModal()">✕</button></div>
   <div class="modal-body" id="modalBody"></div>
   <div class="modal-footer" id="modalFooter"></div>
 </div>
-
-<!-- ═══ TOAST ══════════════════════════════════════════════════════════════ -->
 <div id="toast" class="toast"></div>
 
 <!-- ═══ SCRIPTS ═══════════════════════════════════════════════════════════ -->
 <script src="js/storage.js"></script>
 <script src="js/cvss4.js"></script>
 <script src="js/diagram.js"></script>
+<script src="js/adversal.js"></script>
 <script src="js/assets.js"></script>
 <script src="js/threats.js"></script>
 <script src="js/vulnmgmt.js"></script>

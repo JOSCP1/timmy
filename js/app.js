@@ -1,30 +1,30 @@
 'use strict';
 
 const App = (() => {
-  let toastTimer = null;
+  let toastTimer    = null;
   let autosaveTimer = null;
 
   function init() {
     Diagram.init();
     loadFromStorage();
-    // Restore last view
     const lastView = sessionStorage.getItem('olysec_view') || 'threat-modeler';
     switchView(lastView);
+    document.getElementById('projectName')?.addEventListener('input', autosave);
   }
 
-  // ── View switching ────────────────────────────────────────────────
+  // ── View switching ────────────────────────────────────────────────────
   function switchView(name) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('view-' + name)?.classList.add('active');
     document.querySelector(`[data-view="${name}"]`)?.classList.add('active');
     sessionStorage.setItem('olysec_view', name);
-
     if (name === 'assets')    Assets.refresh();
     if (name === 'vuln-mgmt') VulnMgmt.filter(document.getElementById('vulnFilter')?.value || '');
+    if (name === 'adversal')  Adversal.render();
   }
 
-  // ── Persistence ───────────────────────────────────────────────────
+  // ── Persistence ───────────────────────────────────────────────────────
   function autosave() {
     clearTimeout(autosaveTimer);
     autosaveTimer = setTimeout(saveToStorage, 800);
@@ -33,41 +33,44 @@ const App = (() => {
   function saveToStorage() {
     Storage.save({
       projectName:     document.getElementById('projectName').value,
+      idCounters:      IDCounter.getData(),
       diagram:         Diagram.getData(),
+      assetOrder:      Assets.getOrder(),
       vulnerabilities: VulnMgmt.getAll(),
+      adversal:        Adversal.getAll(),
     });
   }
 
   function loadFromStorage() {
     const data = Storage.load();
     if (!data) return;
+    // Restore ID counters first so subsequent assignments don't collide
+    IDCounter.setData(data.idCounters);
     if (data.projectName) document.getElementById('projectName').value = data.projectName;
     if (data.diagram)     Diagram.setData(data.diagram);
+    if (data.assetOrder)  Assets.setOrder(data.assetOrder);
+    if (data.adversal)    Adversal.setAll(data.adversal);
     if (data.vulnerabilities) {
-      VulnMgmt.setAll(data.vulnerabilities);
-      // Re-link CVSS scores
       data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
+      VulnMgmt.setAll(data.vulnerabilities);
     }
     Assets.refresh();
   }
 
-  // ── Save / Load JSON file ─────────────────────────────────────────
+  // ── Save / Load JSON file ─────────────────────────────────────────────
   function save() {
     saveToStorage();
     const data = Storage.load();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const name = (document.getElementById('projectName').value || 'timmy').replace(/\s+/g,'_');
     const a    = document.createElement('a');
-    const name = (document.getElementById('projectName').value || 'olysec').replace(/\s+/g,'_');
     a.href     = URL.createObjectURL(blob);
     a.download = `${name}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    a.click(); URL.revokeObjectURL(a.href);
     toast('Project saved.', 'ok');
   }
 
-  function load() {
-    document.getElementById('fileInput').click();
-  }
+  function load() { document.getElementById('fileInput').click(); }
 
   function handleFileLoad(e) {
     const file = e.target.files[0];
@@ -76,24 +79,24 @@ const App = (() => {
     reader.onload = ev => {
       try {
         const data = JSON.parse(ev.target.result);
+        IDCounter.setData(data.idCounters);
         if (data.projectName) document.getElementById('projectName').value = data.projectName;
         if (data.diagram)     Diagram.setData(data.diagram);
+        if (data.assetOrder)  Assets.setOrder(data.assetOrder);
+        if (data.adversal)    Adversal.setAll(data.adversal);
         if (data.vulnerabilities) {
           data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
           VulnMgmt.setAll(data.vulnerabilities);
         }
-        Assets.refresh();
-        Storage.save(data);
+        Assets.refresh(); Storage.save(data);
         toast('Project loaded.', 'ok');
-      } catch(err) {
-        toast('Error reading file: ' + err.message, 'error');
-      }
+      } catch(err) { toast('Error: ' + err.message, 'error'); }
       e.target.value = '';
     };
     reader.readAsText(file);
   }
 
-  // ── Modal ─────────────────────────────────────────────────────────
+  // ── Modal ─────────────────────────────────────────────────────────────
   function openModal(title, body, footer = '') {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalBody').innerHTML   = body;
@@ -106,7 +109,7 @@ const App = (() => {
     document.getElementById('modal').classList.remove('visible');
   }
 
-  // ── Toast ─────────────────────────────────────────────────────────
+  // ── Toast ─────────────────────────────────────────────────────────────
   function toast(msg, type = 'ok') {
     clearTimeout(toastTimer);
     const el = document.getElementById('toast');
@@ -114,11 +117,6 @@ const App = (() => {
     el.className   = `toast toast-${type} show`;
     toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
   }
-
-  // Auto-save on project name change
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('projectName')?.addEventListener('input', autosave);
-  });
 
   return { init, switchView, autosave, save, load, handleFileLoad, openModal, closeModal, toast };
 })();
