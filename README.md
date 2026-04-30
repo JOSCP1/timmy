@@ -1,6 +1,15 @@
-# ⬡ OLYSEC — Product Security Risk Management
+<p align="center">
+  <img src="images/timmy.png" alt="Timmy – The Humpback Whale" width="260" />
+</p>
 
-> Open-source threat modeling and product security risk management platform combining STRIDE-based threat identification with CVSS 4.0 risk assessment, privacy & safety impact analysis, and XML reporting.
+<h1 align="center">Timmy</h1>
+<p align="center"><em>Threat Modeling &amp; Product Security Risk Management</em></p>
+<p align="center">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-blue" />
+  <img src="https://img.shields.io/badge/CVSS-4.0-red" />
+  <img src="https://img.shields.io/badge/STRIDE-enabled-orange" />
+  <img src="https://img.shields.io/badge/dependencies-none-green" />
+</p>
 
 ---
 
@@ -41,7 +50,7 @@
 
 ### Option 1 — Open directly (no server needed)
 ```bash
-open /path/to/OLYSEC/index.html
+open index.html
 ```
 
 ### Option 2 — Run with Node.js
@@ -57,19 +66,21 @@ npm start
 
 ```
 OLYSEC/
-├── index.html          # Single-page application shell
+├── images/
+│   └── timmy.png           # Application logo
+├── index.html              # Single-page application shell
 ├── css/
-│   └── style.css       # All styles (CSS variables, dark sidebar, cards)
+│   └── style.css           # All styles (CSS variables, dark sidebar, cards)
 ├── js/
-│   ├── app.js          # App controller, routing, save/load
-│   ├── diagram.js      # SVG diagram editor (pan, zoom, drag, connect)
-│   ├── assets.js       # Asset registry, synced from diagram
-│   ├── threats.js      # STRIDE threat identification engine
-│   ├── cvss4.js        # CVSS 4.0 score calculator + metric UI
-│   ├── vulnmgmt.js     # Vulnerability cards, status, filtering
-│   ├── report.js       # XML report generator
-│   └── storage.js      # localStorage persistence
-├── server.js           # Express static server (deployment)
+│   ├── app.js              # App controller, routing, save/load
+│   ├── diagram.js          # SVG diagram editor (pan, zoom, drag, connect)
+│   ├── assets.js           # Asset registry, synced from diagram
+│   ├── threats.js          # STRIDE threat identification engine
+│   ├── cvss4.js            # CVSS 4.0 score calculator + metric UI
+│   ├── vulnmgmt.js         # Vulnerability cards, status, filtering
+│   ├── report.js           # XML report generator
+│   └── storage.js          # localStorage persistence
+├── server.js               # Express static server (deployment)
 └── package.json
 ```
 
@@ -77,12 +88,12 @@ OLYSEC/
 
 ## 🔐 STRIDE Threat Matrix
 
-| Element Type | S | T | R | I | D | E |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| Process       | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Data Store    |    | ✅ |    | ✅ | ✅ |    |
-| Data Flow     |    | ✅ |    | ✅ | ✅ |    |
-| Trust Boundary| ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Element Type   |  S  |  T  |  R  |  I  |  D  |  E  |
+|----------------|:---:|:---:|:---:|:---:|:---:|:---:|
+| Process        | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  |
+| Data Store     |     | ✅  |     | ✅  | ✅  |     |
+| Data Flow      |     | ✅  |     | ✅  | ✅  |     |
+| Trust Boundary | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  |
 
 **S** Spoofing · **T** Tampering · **R** Repudiation · **I** Information Disclosure · **D** Denial of Service · **E** Elevation of Privilege
 
@@ -90,40 +101,31 @@ OLYSEC/
 
 ## 📊 CVSS 4.0 Metrics
 
-| Group | Metric | Values |
-|---|---|---|
-| Exploitability | Attack Vector (AV) | Network · Adjacent · Local · Physical |
-| Exploitability | Attack Complexity (AC) | Low · High |
-| Exploitability | Attack Requirements (AT) | None · Present |
-| Exploitability | Privileges Required (PR) | None · Low · High |
-| Exploitability | User Interaction (UI) | None · Passive · Active |
-| Vulnerable System | Confidentiality (VC) | None · Low · High |
-| Vulnerable System | Integrity (VI) | None · Low · High |
-| Vulnerable System | Availability (VA) | None · Low · High |
-| Subsequent System | Confidentiality (SC) | None · Low · High |
-| Subsequent System | Integrity (SI) | None · Low · High · Safety |
-| Subsequent System | Availability (SA) | None · Low · High · Safety |
-
----
-
-## 💾 Data Persistence
-
-- **Auto-save** to `localStorage` (800 ms debounce after any change)
-- **Export** project as `.json` file — portable across browsers and machines
-- **Import** `.json` to restore a project
-- **XML Report** export for formal documentation and audit trails
+| Group             | Metric                   | Values                                     |
+|-------------------|--------------------------|--------------------------------------------|
+| Exploitability    | Attack Vector (AV)       | Network · Adjacent · Local · Physical      |
+| Exploitability    | Attack Complexity (AC)   | Low · High                                 |
+| Exploitability    | Attack Requirements (AT) | None · Present                             |
+| Exploitability    | Privileges Required (PR) | None · Low · High                          |
+| Exploitability    | User Interaction (UI)    | None · Passive · Active                    |
+| Vulnerable System | Confidentiality (VC)     | None · Low · High                          |
+| Vulnerable System | Integrity (VI)           | None · Low · High                          |
+| Vulnerable System | Availability (VA)        | None · Low · High                          |
+| Subsequent System | Confidentiality (SC)     | None · Low · High                          |
+| Subsequent System | Integrity (SI)           | None · Low · High · Safety                 |
+| Subsequent System | Availability (SA)        | None · Low · High · Safety                 |
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | Vanilla HTML5 / CSS3 / ES6+ JavaScript |
-| Diagrams | Custom SVG editor (no external lib) |
-| Server | Node.js + Express (optional) |
-| Storage | Browser localStorage + JSON export |
-| License | Apache 2.0 |
+| Layer     | Technology                                   |
+|-----------|----------------------------------------------|
+| Frontend  | Vanilla HTML5 / CSS3 / ES6+ JavaScript       |
+| Diagrams  | Custom SVG editor (no external lib)          |
+| Server    | Node.js + Express (optional)                 |
+| Storage   | Browser localStorage + JSON export           |
+| License   | Apache 2.0                                   |
 
 No build step. No framework. No external frontend dependencies.
 

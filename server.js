@@ -10,5 +10,5 @@ app.get('*', (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`OLYSEC running at http://localhost:${PORT}`);
+  console.log(`Timmy running at http://localhost:${PORT}`);
 });

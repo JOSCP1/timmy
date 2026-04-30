@@ -1,7 +1,7 @@
 {
-  "name": "olysec",
+  "name": "timmy",
   "version": "1.0.0",
-  "description": "OLYSEC – Threat Modeling & Product Security Risk Management",
+  "description": "Timmy – Threat Modeling & Product Security Risk Management",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

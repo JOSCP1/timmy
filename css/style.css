@@ -30,9 +30,9 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
   padding: 0 16px; gap: 16px; z-index: 100; position: relative;
   border-bottom: 1px solid #1e293b;
 }
-.logo { display: flex; align-items: center; gap: 8px; }
-.logo-icon { font-size: 22px; }
-.logo-text { color: #94a3b8; font-size: 18px; letter-spacing: .5px; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-img { height: 36px; width: 36px; object-fit: contain; border-radius: 4px; }
+.logo-text { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: .5px; }
 .logo-text strong { color: #fff; }
 .header-center { flex: 1; display: flex; justify-content: center; }
 .project-name-input {
