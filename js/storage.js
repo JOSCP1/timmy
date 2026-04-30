@@ -1,5 +1,12 @@
 'use strict';
 
+// ── Global HTML escape (used by every rendering module) ─────────────────
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // ── Global ID counters (accessible to all modules) ───────────────────────
 const IDCounter = {
   _tm: 0, _v: 0, _ai: 0,

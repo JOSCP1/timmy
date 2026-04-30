@@ -353,13 +353,26 @@ const Diagram = (() => {
 
   // ── Selection & Properties ────────────────────────────────────────────
   function selectElement(id) {
-    selected={type:'element',id};
-    const el=elements.find(e=>e.id===id);
+    // Re-render previous selection to remove its ring first
+    const prev = selected;
+    if (prev && prev.id !== id) {
+      selected = null;
+      if (prev.type === 'element') { const e = elements.find(el=>el.id===prev.id); if(e) renderElement(e); }
+      else if (prev.type === 'conn') { const c = connections.find(cn=>cn.id===prev.id); if(c) renderConn(c); }
+    }
+    selected = { type:'element', id };
+    const el = elements.find(e=>e.id===id);
     if (el) { renderElement(el); showProps(el); }
   }
   function selectConn(id) {
-    selected={type:'conn',id};
-    const c=connections.find(c=>c.id===id);
+    const prev = selected;
+    if (prev && prev.id !== id) {
+      selected = null;
+      if (prev.type === 'element') { const e = elements.find(el=>el.id===prev.id); if(e) renderElement(e); }
+      else if (prev.type === 'conn') { const c = connections.find(cn=>cn.id===prev.id); if(c) renderConn(c); }
+    }
+    selected = { type:'conn', id };
+    const c = connections.find(c=>c.id===id);
     if (c) { renderConn(c); showConnProps(c); }
   }
   function clearSelection() {
