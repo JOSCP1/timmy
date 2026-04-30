@@ -204,7 +204,11 @@ const VulnMgmt = (() => {
         v.cvssScore = CVSS4.score(v.cvss);
       }
     }
+    const expanded = new Set(
+      [...document.querySelectorAll('.vuln-card.expanded')].map(el => el.id)
+    );
     render(); updateBadge(); App.autosave();
+    expanded.forEach(id => document.getElementById(id)?.classList.add('expanded'));
   }
 
   function setStatus(id, val) {
