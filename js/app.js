@@ -20,6 +20,7 @@ const App = (() => {
     document.getElementById('view-' + name)?.classList.add('active');
     document.querySelector(`[data-view="${name}"]`)?.classList.add('active');
     sessionStorage.setItem('timmy_view', name);
+    if (name === 'products')  Products.render();
     if (name === 'assets')    Assets.refresh();
     if (name === 'vuln-mgmt') VulnMgmt.filter(document.getElementById('vulnFilter')?.value || '');
     if (name === 'adversal')  Adversal.render();
@@ -33,6 +34,8 @@ const App = (() => {
   }
 
   function saveToStorage() {
+    // Persist current diagram state into the active product threat model before saving
+    Products.saveCurrentDiagram(Diagram.getData());
     Storage.save({
       projectName:     document.getElementById('projectName').value,
       idCounters:      IDCounter.getData(),
@@ -40,6 +43,7 @@ const App = (() => {
       assetOrder:      Assets.getOrder(),
       vulnerabilities: VulnMgmt.getAll(),
       adversal:        Adversal.getAll(),
+      products:        Products.getAll(),
     });
   }
 
@@ -56,6 +60,7 @@ const App = (() => {
       data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
       VulnMgmt.setAll(data.vulnerabilities);
     }
+    if (data.products)    Products.setAll(data.products);
     Assets.refresh();
   }
 
@@ -90,6 +95,7 @@ const App = (() => {
           data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
           VulnMgmt.setAll(data.vulnerabilities);
         }
+        if (data.products)    Products.setAll(data.products);
         Assets.refresh(); Storage.save(data);
         toast('Project loaded.', 'ok');
       } catch(err) { toast('Error: ' + err.message, 'error'); }
