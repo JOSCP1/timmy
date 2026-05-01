@@ -8,6 +8,9 @@
 </head>
 <body>
 
+<!-- ═══ LOGIN OVERLAY ════════════════════════════════════════════════════ -->
+<div id="loginOverlay" class="login-overlay"></div>
+
 <!-- ═══ HEADER ════════════════════════════════════════════════════════════ -->
 <header class="app-header">
   <div class="logo">
@@ -21,11 +24,15 @@
     <button class="btn btn-ghost" onclick="App.save()">💾 Save</button>
     <button class="btn btn-ghost" onclick="App.load()">📂 Open</button>
     <input id="fileInput" type="file" accept=".json" style="display:none" onchange="App.handleFileLoad(event)" />
+    <div class="header-user">
+      <span id="headerUsername" class="header-username"></span>
+      <button class="btn btn-ghost btn-sm" onclick="Auth.logout()" title="Sign out">⏻ Sign Out</button>
+    </div>
   </div>
 </header>
 
 <!-- ═══ SHELL ══════════════════════════════════════════════════════════════ -->
-<div class="app-shell">
+<div class="app-shell" id="appShell" style="display:none">
 
   <!-- ── Sidebar ── -->
   <nav class="sidebar">
@@ -45,7 +52,12 @@
         <span class="nav-icon">⚠️</span><span class="nav-label">Adversal Impact</span>
       </li>
     </ul>
-    <div class="sidebar-footer"><div class="version">v1.0.0</div></div>
+    <ul class="nav-list" style="padding-top:0;border-top:1px solid #1e293b">
+      <li class="nav-item" data-view="settings" onclick="App.switchView('settings')">
+        <span class="nav-icon">⚙️</span><span class="nav-label">Settings</span>
+      </li>
+    </ul>
+    <div class="sidebar-footer"><div class="version">v0.2.1</div></div>
   </nav>
 
   <!-- ── Main Content ── -->
@@ -165,6 +177,40 @@
       </div>
     </section>
 
+    <!-- ══ SETTINGS VIEW ════════════════════════════════════════════════ -->
+    <section class="view" id="view-settings">
+      <div class="view-header">
+        <h2>Settings</h2>
+      </div>
+      <div class="settings-wrap">
+
+        <!-- User Management -->
+        <div class="settings-section">
+          <div class="settings-section-title">
+            <h3>User Management</h3>
+            <button class="btn btn-primary btn-sm" onclick="Settings.showAddUser()">+ Add User</button>
+          </div>
+          <div class="settings-body">
+            <table class="data-table">
+              <thead>
+                <tr><th>Username</th><th>Role</th><th>Created</th><th></th></tr>
+              </thead>
+              <tbody id="usersTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Single Sign-On -->
+        <div class="settings-section">
+          <div class="settings-section-title">
+            <h3>Single Sign-On (OpenID Connect / Active Directory)</h3>
+          </div>
+          <div class="settings-body" id="oidcForm"></div>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -186,6 +232,8 @@
 <script src="js/threats.js"></script>
 <script src="js/vulnmgmt.js"></script>
 <script src="js/report.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/settings.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

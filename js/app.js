@@ -4,10 +4,11 @@ const App = (() => {
   let toastTimer    = null;
   let autosaveTimer = null;
 
-  function init() {
+  async function init() {
+    await Auth.init();
     Diagram.init();
     loadFromStorage();
-    const lastView = sessionStorage.getItem('olysec_view') || 'threat-modeler';
+    const lastView = sessionStorage.getItem('timmy_view') || 'threat-modeler';
     switchView(lastView);
     document.getElementById('projectName')?.addEventListener('input', autosave);
   }
@@ -18,10 +19,11 @@ const App = (() => {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('view-' + name)?.classList.add('active');
     document.querySelector(`[data-view="${name}"]`)?.classList.add('active');
-    sessionStorage.setItem('olysec_view', name);
+    sessionStorage.setItem('timmy_view', name);
     if (name === 'assets')    Assets.refresh();
     if (name === 'vuln-mgmt') VulnMgmt.filter(document.getElementById('vulnFilter')?.value || '');
     if (name === 'adversal')  Adversal.render();
+    if (name === 'settings')  Settings.render();
   }
 
   // ── Persistence ───────────────────────────────────────────────────────

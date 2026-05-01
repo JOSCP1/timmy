@@ -18,10 +18,17 @@ const IDCounter = {
 };
 
 const Storage = (() => {
-  const KEY = 'olysec_data';
+  const KEY     = 'timmy_data';
+  const OLD_KEY = 'olysec_data';
 
   function load() {
     try {
+      // Migrate from old key on first load
+      const legacy = localStorage.getItem(OLD_KEY);
+      if (legacy && !localStorage.getItem(KEY)) {
+        localStorage.setItem(KEY, legacy);
+        localStorage.removeItem(OLD_KEY);
+      }
       const raw = localStorage.getItem(KEY);
       return raw ? JSON.parse(raw) : null;
     } catch (e) { return null; }
