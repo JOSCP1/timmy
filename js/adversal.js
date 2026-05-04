@@ -7,7 +7,7 @@ const Adversal = (() => {
   function add() {
     impacts.push({
       id: IDCounter.nextAI(),
-      name: 'New Adversal Impact',
+      name: 'New Adverse Impact',
       cia: { c:'N', i:'N', a:'N' },
       privacyImpact: 'None',
       safetyImpact:  'None'
@@ -16,7 +16,7 @@ const Adversal = (() => {
   }
 
   function remove(id) {
-    if (!confirm('Remove this adversal impact?')) return;
+    if (!confirm('Remove this adverse impact?')) return;
     impacts = impacts.filter(ai => ai.id !== id);
     render(); App.autosave();
   }

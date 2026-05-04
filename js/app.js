@@ -11,48 +11,45 @@ const App = (() => {
     const lastView = sessionStorage.getItem('timmy_view') || 'threat-modeler';
     switchView(lastView);
     document.getElementById('projectName')?.addEventListener('input', autosave);
+    document.getElementById('productName')?.addEventListener('input', autosave);
   }
 
-  // ── View switching ────────────────────────────────────────────────────
   function switchView(name) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('view-' + name)?.classList.add('active');
     document.querySelector(`[data-view="${name}"]`)?.classList.add('active');
     sessionStorage.setItem('timmy_view', name);
-    if (name === 'products')  Products.render();
     if (name === 'assets')    Assets.refresh();
     if (name === 'vuln-mgmt') VulnMgmt.filter(document.getElementById('vulnFilter')?.value || '');
     if (name === 'adversal')  Adversal.render();
     if (name === 'settings')  Settings.render();
   }
 
-  // ── Persistence ───────────────────────────────────────────────────────
   function autosave() {
     clearTimeout(autosaveTimer);
     autosaveTimer = setTimeout(saveToStorage, 800);
   }
 
   function saveToStorage() {
-    // Persist current diagram state into the active product threat model before saving
-    Products.saveCurrentDiagram(Diagram.getData());
     Storage.save({
       projectName:     document.getElementById('projectName').value,
+      productName:     document.getElementById('productName')?.value || '',
       idCounters:      IDCounter.getData(),
       diagram:         Diagram.getData(),
       assetOrder:      Assets.getOrder(),
       vulnerabilities: VulnMgmt.getAll(),
       adversal:        Adversal.getAll(),
-      products:        Products.getAll(),
     });
   }
 
   function loadFromStorage() {
     const data = Storage.load();
     if (!data) return;
-    // Restore ID counters first so subsequent assignments don't collide
     IDCounter.setData(data.idCounters);
     if (data.projectName) document.getElementById('projectName').value = data.projectName;
+    const prod = document.getElementById('productName');
+    if (data.productName && prod) prod.value = data.productName;
     if (data.diagram)     Diagram.setData(data.diagram);
     if (data.assetOrder)  Assets.setOrder(data.assetOrder);
     if (data.adversal)    Adversal.setAll(data.adversal);
@@ -60,21 +57,36 @@ const App = (() => {
       data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
       VulnMgmt.setAll(data.vulnerabilities);
     }
-    if (data.products)    Products.setAll(data.products);
     Assets.refresh();
   }
 
-  // ── Save / Load JSON file ─────────────────────────────────────────────
-  function save() {
+  // ── Save As dialog ────────────────────────────────────────────────────
+  function save()   { saveAs(); }
+  function saveAs() {
+    const defaultName = (document.getElementById('projectName')?.value || 'timmy-project').replace(/\s+/g,'_');
+    openModal('Save Project', `
+      <div class="form-field">
+        <label>Filename</label>
+        <input type="text" id="saveAsName" value="${defaultName}" style="width:100%" />
+      </div>`,
+      `<button class="btn btn-ghost" onclick="App.closeModal()">Cancel</button>
+       <button class="btn btn-primary" onclick="App.confirmSaveAs()">💾 Download</button>`);
+    setTimeout(() => { const inp = document.getElementById('saveAsName'); inp?.select(); inp?.focus(); }, 50);
+  }
+
+  function confirmSaveAs() {
     saveToStorage();
     const data = Storage.load();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const name = (document.getElementById('projectName').value || 'timmy').replace(/\s+/g,'_');
+    const name = (document.getElementById('saveAsName')?.value || 'timmy-project')
+      .replace(/[^a-zA-Z0-9_\-]/g,'_').replace(/\.json$/i,'');
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
     const a    = document.createElement('a');
     a.href     = URL.createObjectURL(blob);
     a.download = `${name}.json`;
     a.click(); URL.revokeObjectURL(a.href);
+    closeModal();
     toast('Project saved.', 'ok');
+    Audit.log('save_project', { name });
   }
 
   function load() { document.getElementById('fileInput').click(); }
@@ -88,6 +100,8 @@ const App = (() => {
         const data = JSON.parse(ev.target.result);
         IDCounter.setData(data.idCounters);
         if (data.projectName) document.getElementById('projectName').value = data.projectName;
+        const prod = document.getElementById('productName');
+        if (data.productName && prod) prod.value = data.productName;
         if (data.diagram)     Diagram.setData(data.diagram);
         if (data.assetOrder)  Assets.setOrder(data.assetOrder);
         if (data.adversal)    Adversal.setAll(data.adversal);
@@ -95,16 +109,15 @@ const App = (() => {
           data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
           VulnMgmt.setAll(data.vulnerabilities);
         }
-        if (data.products)    Products.setAll(data.products);
         Assets.refresh(); Storage.save(data);
         toast('Project loaded.', 'ok');
+        Audit.log('load_project', { name: data.projectName });
       } catch(err) { toast('Error: ' + err.message, 'error'); }
       e.target.value = '';
     };
     reader.readAsText(file);
   }
 
-  // ── Modal ─────────────────────────────────────────────────────────────
   function openModal(title, body, footer = '') {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalBody').innerHTML   = body;
@@ -117,7 +130,6 @@ const App = (() => {
     document.getElementById('modal').classList.remove('visible');
   }
 
-  // ── Toast ─────────────────────────────────────────────────────────────
   function toast(msg, type = 'ok') {
     clearTimeout(toastTimer);
     const el = document.getElementById('toast');
@@ -126,7 +138,8 @@ const App = (() => {
     toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
   }
 
-  return { init, switchView, autosave, save, load, handleFileLoad, openModal, closeModal, toast };
+  return { init, switchView, autosave, save, saveAs, confirmSaveAs, load, handleFileLoad,
+           openModal, closeModal, toast };
 })();
 
 window.addEventListener('DOMContentLoaded', App.init);

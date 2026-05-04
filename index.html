@@ -19,11 +19,13 @@
     <span class="logo-text"><strong>Timmy</strong></span>
   </div>
   <div class="header-center">
-    <input id="projectName" type="text" placeholder="Untitled Project" class="project-name-input" />
-    <div id="activeModelBar" class="active-model-bar" style="display:none"></div>
+    <div class="header-inputs">
+      <input id="projectName" type="text" placeholder="Project name" class="project-name-input" />
+      <input id="productName" type="text" placeholder="Product" class="product-name-input-hdr" />
+    </div>
   </div>
   <div class="header-actions">
-    <button class="btn btn-ghost" onclick="App.save()">💾 Save</button>
+    <button class="btn btn-ghost" onclick="App.saveAs()">💾 Save As</button>
     <button class="btn btn-ghost" onclick="App.load()">📂 Open</button>
     <input id="fileInput" type="file" accept=".json" style="display:none" onchange="App.handleFileLoad(event)" />
     <div class="header-user">
@@ -39,9 +41,6 @@
   <!-- ── Sidebar ── -->
   <nav class="sidebar">
     <ul class="nav-list">
-      <li class="nav-item" data-view="products" onclick="App.switchView('products')">
-        <span class="nav-icon">🗂️</span><span class="nav-label">Products</span>
-      </li>
       <li class="nav-item active" data-view="threat-modeler" onclick="App.switchView('threat-modeler')">
         <span class="nav-icon">🗺️</span><span class="nav-label">Threat Modeler</span>
       </li>
@@ -54,7 +53,7 @@
         <span class="badge badge-red" id="vulnBadge">0</span>
       </li>
       <li class="nav-item" data-view="adversal" onclick="App.switchView('adversal')">
-        <span class="nav-icon">⚠️</span><span class="nav-label">Adversal Impact</span>
+        <span class="nav-icon">⚠️</span><span class="nav-label">Adverse Impact</span>
       </li>
     </ul>
     <ul class="nav-list" style="padding-top:0;border-top:1px solid #1e293b">
@@ -62,24 +61,11 @@
         <span class="nav-icon">⚙️</span><span class="nav-label">Settings</span>
       </li>
     </ul>
-    <div class="sidebar-footer"><div class="version">v0.3</div></div>
+    <div class="sidebar-footer"><div class="version">v0.5</div></div>
   </nav>
 
   <!-- ── Main Content ── -->
   <main class="main-content">
-
-    <!-- ══ PRODUCTS VIEW ════════════════════════════════════════════════ -->
-    <section class="view" id="view-products">
-      <div class="view-header">
-        <h2>Products</h2>
-        <div class="toolbar-group">
-          <button class="btn btn-primary" onclick="Products.addProduct()">+ Add Product</button>
-        </div>
-      </div>
-      <div class="products-list" id="productsList">
-        <div class="table-empty" id="productsEmpty">No products yet. Click "+ Add Product" to get started.</div>
-      </div>
-    </section>
 
     <!-- ══ THREAT MODELER VIEW ════════════════════════════════════════════ -->
     <section class="view active" id="view-threat-modeler">
@@ -113,6 +99,13 @@
               </marker>
               <marker id="arrowSel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
+              </marker>
+              <!-- Reverse markers for bidirectional arrows (marker-start) -->
+              <marker id="arrowRev" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
+                <polygon points="10 0, 0 3.5, 10 7" class="arrowhead" />
+              </marker>
+              <marker id="arrowSelRev" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
+                <polygon points="10 0, 0 3.5, 10 7" fill="#3b82f6" />
               </marker>
             </defs>
             <g id="layerTrustZones"></g>
@@ -149,11 +142,7 @@
       <div class="table-wrap">
         <table class="data-table" id="assetsTable">
           <thead>
-            <tr>
-              <th>ID</th><th>Name</th><th>Type</th>
-              <th>C</th><th>I</th><th>A</th>
-              <th>Risks</th><th>Order</th>
-            </tr>
+            <tr><th>ID</th><th>Name</th><th>Type</th><th>C</th><th>I</th><th>A</th><th>Risks</th><th>Order</th></tr>
           </thead>
           <tbody id="assetsTbody"></tbody>
         </table>
@@ -182,24 +171,22 @@
       </div>
     </section>
 
-    <!-- ══ ADVERSAL IMPACT VIEW ═══════════════════════════════════════════ -->
+    <!-- ══ ADVERSE IMPACT VIEW ════════════════════════════════════════════ -->
     <section class="view" id="view-adversal">
       <div class="view-header">
-        <h2>Adversal Impact</h2>
+        <h2>Adverse Impact</h2>
         <div class="toolbar-group">
           <button class="btn btn-primary" onclick="Adversal.add()">+ Add Impact</button>
         </div>
       </div>
       <div class="adversal-list" id="adversalList">
-        <div class="table-empty" id="adversalEmpty">No adversal impacts defined. Click "+ Add Impact" to create one.</div>
+        <div class="table-empty" id="adversalEmpty">No adverse impacts defined. Click "+ Add Impact" to create one.</div>
       </div>
     </section>
 
     <!-- ══ SETTINGS VIEW ════════════════════════════════════════════════ -->
     <section class="view" id="view-settings">
-      <div class="view-header">
-        <h2>Settings</h2>
-      </div>
+      <div class="view-header"><h2>Settings</h2></div>
       <div class="settings-wrap">
 
         <!-- User Management -->
@@ -210,28 +197,33 @@
           </div>
           <div class="settings-body">
             <table class="data-table">
-              <thead>
-                <tr><th>Username</th><th>Role</th><th>Created</th><th></th></tr>
-              </thead>
+              <thead><tr><th>Username</th><th>Role</th><th>Created</th><th></th></tr></thead>
               <tbody id="usersTbody"></tbody>
             </table>
           </div>
         </div>
 
-        <!-- Single Sign-On -->
+        <!-- SSO -->
         <div class="settings-section">
-          <div class="settings-section-title">
-            <h3>Single Sign-On (OpenID Connect / Active Directory)</h3>
-          </div>
+          <div class="settings-section-title"><h3>Single Sign-On (OpenID Connect / Active Directory)</h3></div>
           <div class="settings-body" id="oidcForm"></div>
         </div>
 
         <!-- Misc -->
         <div class="settings-section">
-          <div class="settings-section-title">
-            <h3>Misc</h3>
-          </div>
+          <div class="settings-section-title"><h3>Misc</h3></div>
           <div class="settings-body" id="miscSettings"></div>
+        </div>
+
+        <!-- Audit Log (admin only) -->
+        <div class="settings-section">
+          <div class="settings-section-title">
+            <h3>Audit Log</h3>
+            <button class="btn btn-ghost btn-sm" onclick="Settings.render()">↻ Refresh</button>
+          </div>
+          <div class="settings-body" id="auditLog">
+            <p style="color:var(--c-muted);font-size:12px">Open Settings to load the audit log.</p>
+          </div>
         </div>
 
       </div>
@@ -258,7 +250,7 @@
 <script src="js/threats.js"></script>
 <script src="js/vulnmgmt.js"></script>
 <script src="js/report.js"></script>
-<script src="js/products.js"></script>
+<script src="js/audit.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/app.js"></script>

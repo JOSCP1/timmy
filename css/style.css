@@ -34,12 +34,18 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
 .logo-img { height: 36px; width: 36px; object-fit: contain; border-radius: 4px; }
 .logo-text { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: .5px; }
 .logo-text strong { color: #fff; }
-.header-center { flex: 1; display: flex; justify-content: center; }
+.header-center { flex: 1; display: flex; justify-content: center; align-items: center; }
+.header-inputs  { display: flex; gap: 8px; align-items: center; }
 .project-name-input {
   background: #1e293b; border: 1px solid #334155; color: #e2e8f0; border-radius: 4px;
-  padding: 4px 12px; font-size: 14px; width: 280px; text-align: center;
+  padding: 4px 12px; font-size: 14px; width: 220px; text-align: center;
 }
 .project-name-input:focus { outline: none; border-color: var(--c-primary); }
+.product-name-input-hdr {
+  background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px;
+  padding: 4px 10px; font-size: 12px; width: 140px; text-align: center;
+}
+.product-name-input-hdr:focus { outline: none; border-color: var(--c-primary); color: #e2e8f0; }
 .header-actions { display: flex; gap: 8px; }
 
 .app-shell { display: flex; height: calc(100vh - 52px); overflow: hidden; }
@@ -154,6 +160,19 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
 .cia-row { display: flex; gap: 6px; }
 .cia-row > div { flex: 1; }
 .cia-row label { font-size: 10px; }
+
+/* Per-CIA justification rows */
+.cia-just-row {
+  display: grid; grid-template-columns: 18px 90px 1fr; gap: 6px;
+  align-items: center; margin-bottom: 6px;
+}
+.cia-just-label {
+  font-size: 11px; font-weight: 700; color: var(--c-muted);
+  text-align: center;
+}
+.cia-just-select { padding: 4px 6px; border: 1px solid var(--c-border); border-radius: 4px; font-size: 12px; background: #f8fafc; }
+.cia-just-input  { padding: 4px 6px; border: 1px solid var(--c-border); border-radius: 4px; font-size: 12px; background: #f8fafc; min-width: 0; }
+.cia-just-select:focus, .cia-just-input:focus { outline: none; border-color: var(--c-primary); background: #fff; }
 
 /* ═══ ASSETS TABLE ════════════════════════════════════════════════════════ */
 .table-wrap { flex: 1; min-height: 0; overflow: auto; padding: 16px 20px; }
@@ -489,5 +508,8 @@ html.night-mode .modal-footer { border-color: #30363d; }
 html.night-mode .login-box { background: #161b22; }
 html.night-mode .affected-item-link { background: #1c2128; border-color: #30363d; }
 html.night-mode .affected-item-link:hover { background: #0d2137; }
+html.night-mode .cia-just-select,
+html.night-mode .cia-just-input,
+html.night-mode .product-name-input-hdr { background: #0d1117; color: var(--c-text); border-color: #30363d; }
 html.night-mode ::-webkit-scrollbar-track { background: #0d1117; }
 html.night-mode ::-webkit-scrollbar-thumb { background: #30363d; }
