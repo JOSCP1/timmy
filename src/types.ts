@@ -142,20 +142,5 @@ interface AppModule {
   closeModal(): void; toast(msg: string, type?: string): void;
 }
 
-// ── Global declarations (cross-file references) ────────────────────────────
-declare const IDCounter: IDCounterModule;
-declare const Storage:   StorageModule;
-declare const CVSS4:     CVSS4Module;
-declare const Diagram:   DiagramModule;
-declare const Adversal:  AdversalModule;
-declare const Assets:    AssetsModule;
-declare const Threats:   ThreatsModule;
-declare const VulnMgmt:  VulnMgmtModule;
-declare const Report:    ReportModule;
-declare const Audit:     AuditModule;
-declare const Auth:      AuthModule;
-declare const Settings:  SettingsModule;
-declare const App:       AppModule;
-
-// ── Global helpers ─────────────────────────────────────────────────────────
+// ── Global helper (defined in storage.ts, used everywhere) ────────────────
 declare function esc(s: unknown): string;

@@ -56,7 +56,15 @@ const VulnMgmt = (() => {
     // Remove existing vuln cards but keep the empty placeholder
     [...list.children].forEach(c => { if (c.id !== 'vulnEmpty') c.remove(); });
 
-    const shown = vulns.filter(v => !filterStatus || v.status === filterStatus);
+    const assetIndex = {};
+    Diagram.getAllAssets().forEach(a => { assetIndex[a.id] = a; });
+    const diagramAssetIds = new Set(Object.keys(assetIndex));
+
+    // Only show vulns belonging to the current model (matched asset) or manually added (no assetId)
+    const shown = vulns.filter(v =>
+      (!v.assetId || diagramAssetIds.has(v.assetId)) &&
+      (!filterStatus || v.status === filterStatus)
+    );
 
     if (!shown.length) { empty.style.display = 'block'; return; }
     empty.style.display = 'none';
@@ -64,9 +72,6 @@ const VulnMgmt = (() => {
     const adversalOpts = Adversal.getAll().map(ai =>
       `<option value="${ai.id}">${esc(ai.name)}</option>`
     ).join('');
-
-    const assetIndex = {};
-    Diagram.getAllAssets().forEach(a => { assetIndex[a.id] = a; });
 
     shown.forEach(v => {
       const q     = CVSS4.qualitative(v.cvssScore);
@@ -249,7 +254,9 @@ const VulnMgmt = (() => {
   function filterFn(status) { filterStatus = status; render(); }
 
   function updateBadge() {
-    document.getElementById('vulnBadge').textContent = vulns.length;
+    const diagramAssetIds = new Set(Diagram.getAllAssets().map(a => a.id));
+    const count = vulns.filter(v => !v.assetId || diagramAssetIds.has(v.assetId)).length;
+    document.getElementById('vulnBadge').textContent = count;
   }
 
   // ── Serialise ─────────────────────────────────────────────────────────

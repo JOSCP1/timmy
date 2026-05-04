@@ -32,12 +32,17 @@ const VulnMgmt: VulnMgmtModule = (() => {
     if (!list || !empty) return;
 
     [...list.children].forEach(c => { if (c.id !== 'vulnEmpty') c.remove(); });
-    const shown = vulns.filter(v => !filterStatus || v.status === filterStatus);
-    if (!shown.length) { empty.style.display = 'block'; return; }
-    empty.style.display = 'none';
 
     const assetIndex: Record<string, AssetRecord> = {};
     Diagram.getAllAssets().forEach(a => { assetIndex[a.id] = a; });
+    const diagramAssetIds = new Set(Object.keys(assetIndex));
+
+    const shown = vulns.filter(v =>
+      (!v.assetId || diagramAssetIds.has(v.assetId)) &&
+      (!filterStatus || v.status === filterStatus)
+    );
+    if (!shown.length) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
 
     const adversalOpts = Adversal.getAll().map(ai =>
       `<option value="${ai.id}">${esc(ai.name)}</option>`
@@ -180,8 +185,10 @@ const VulnMgmt: VulnMgmtModule = (() => {
   function filterFn(status: string): void { filterStatus = status; render(); }
 
   function updateBadge(): void {
+    const diagramAssetIds = new Set(Diagram.getAllAssets().map(a => a.id));
+    const count = vulns.filter(v => !v.assetId || diagramAssetIds.has(v.assetId)).length;
     const el = document.getElementById('vulnBadge');
-    if (el) el.textContent = String(vulns.length);
+    if (el) el.textContent = String(count);
   }
 
   function getAll(): Vulnerability[] { return vulns; }
