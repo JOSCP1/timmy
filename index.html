@@ -69,6 +69,7 @@
             <button class="tool-btn active" data-tool="select"     title="Select / Move (V)">↖</button>
             <button class="tool-btn"         data-tool="process"   title="Process – Circle (P)">◯</button>
             <button class="tool-btn"         data-tool="store"     title="Data Store – Bars (S)">▬</button>
+            <button class="tool-btn"         data-tool="external"  title="External Entity – Rectangle (E)">▭</button>
             <button class="tool-btn"         data-tool="dataflow"  title="Data Flow – Arrow (F)">→</button>
             <button class="tool-btn"         data-tool="trustzone" title="Trust Zone – Dashed (T)">⬜</button>
           </div>
@@ -93,11 +94,12 @@
               <marker id="arrowSel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
               </marker>
-              <marker id="arrowRev" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
-                <polygon points="10 0, 0 3.5, 10 7" class="arrowhead" />
+              <!-- auto-start-reverse flips orientation at marker-start so the head points back correctly -->
+              <marker id="arrowBi" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto-start-reverse">
+                <polygon points="0 0, 10 3.5, 0 7" class="arrowhead" />
               </marker>
-              <marker id="arrowSelRev" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
-                <polygon points="10 0, 0 3.5, 10 7" fill="#3b82f6" />
+              <marker id="arrowBiSel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto-start-reverse">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
               </marker>
             </defs>
             <g id="layerTrustZones"></g>
@@ -125,7 +127,8 @@
           <select class="filter-select" onchange="Assets.filter(this.value)">
             <option value="">All Types</option>
             <option value="process">Process</option>
-            <option value="store">Store</option>
+            <option value="store">Data Store</option>
+            <option value="external">External Entity</option>
             <option value="dataflow">Data Flow</option>
           </select>
           <button class="btn btn-ghost btn-sm" onclick="Assets.exportCSV()">⬇ Export CSV</button>

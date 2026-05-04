@@ -16,6 +16,7 @@ const Threats = (() => {
   const THREAT_MAP = {
     process:   ['S','T','R','ID','D','E'],
     store:     ['T','ID','D'],
+    external:  ['S','R'],   // External entities: spoofing identity, repudiation of actions
     dataflow:  ['T','ID','D'],
     trustzone: [],   // not directly threatened; crossing generates threats on the dataflow
   };

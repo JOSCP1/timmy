@@ -42,6 +42,7 @@ const Diagram = (() => {
       if (e.key==='v'||e.key==='V') setTool('select');
       if (e.key==='p'||e.key==='P') setTool('process');
       if (e.key==='s'||e.key==='S') setTool('store');
+      if (e.key==='e'||e.key==='E') setTool('external');
       if (e.key==='f'||e.key==='F') setTool('dataflow');
       if (e.key==='t'||e.key==='T') setTool('trustzone');
       if (e.key==='Delete'||e.key==='Backspace') deleteSelected();
@@ -68,7 +69,8 @@ const Diagram = (() => {
   function hitElement(x, y) {
     return elements.slice().reverse().find(el => {
       if (el.type==='process')   return Math.hypot(x-el.x, y-el.y) <= el.r;
-      if (el.type==='store')     return x>=el.x-el.w/2&&x<=el.x+el.w/2&&y>=el.y-el.h/2&&y<=el.y+el.h/2;
+      if (el.type==='store'||el.type==='external')
+                                 return x>=el.x-el.w/2&&x<=el.x+el.w/2&&y>=el.y-el.h/2&&y<=el.y+el.h/2;
       if (el.type==='trustzone') return x>=el.x&&x<=el.x+el.w&&y>=el.y&&y<=el.y+el.h;
       return false;
     });
@@ -87,7 +89,7 @@ const Diagram = (() => {
 
   function getHandles(el) {
     if (el.type==='process') return [{ n:'e', cx:el.x+el.r, cy:el.y }];
-    if (el.type==='store') {
+    if (el.type==='store'||el.type==='external') {
       const [hw,hh]=[el.w/2,el.h/2];
       return [{ n:'se',cx:el.x+hw,cy:el.y+hh },{ n:'sw',cx:el.x-hw,cy:el.y+hh },
               { n:'ne',cx:el.x+hw,cy:el.y-hh },{ n:'nw',cx:el.x-hw,cy:el.y-hh }];
@@ -116,8 +118,9 @@ const Diagram = (() => {
       else if (cn) { selectConn(cn.id); }
       else         { clearSelection(); panState={sx:e.clientX,sy:e.clientY,vx:viewBox.x,vy:viewBox.y}; }
     }
-    else if (tool==='process') addElement({type:'process',x:p.x,y:p.y,r:42,name:'Process',cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
-    else if (tool==='store')   addElement({type:'store',x:p.x,y:p.y,w:110,h:55,name:'Store',cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
+    else if (tool==='process')  addElement({type:'process', x:p.x,y:p.y,r:42,    name:'Process',         cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
+    else if (tool==='store')    addElement({type:'store',   x:p.x,y:p.y,w:110,h:55,name:'Data Store',      cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
+    else if (tool==='external') addElement({type:'external',x:p.x,y:p.y,w:90, h:60, name:'External Entity',cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='dataflow') {
       const el=hitElement(p.x,p.y);
       if (el&&el.type!=='trustzone') {
@@ -148,9 +151,9 @@ const Diagram = (() => {
       const el=elements.find(e=>e.id===resizing.elId); if(!el) return;
       const dx=p.x-resizing.startPt.x, dy=p.y-resizing.startPt.y, s=resizing.startEl, h=resizing.handle;
       if (el.type==='process') { el.r=Math.max(25,s.r+dx); }
-      else if (el.type==='store') {
-        if(h.includes('e')){el.x=s.x+dx/2;el.w=Math.max(60,s.w+dx);}
-        if(h.includes('w')){el.x=s.x+dx/2;el.w=Math.max(60,s.w-dx);}
+      else if (el.type==='store'||el.type==='external') {
+        if(h.includes('e')){el.x=s.x+dx/2;el.w=Math.max(40,s.w+dx);}
+        if(h.includes('w')){el.x=s.x+dx/2;el.w=Math.max(40,s.w-dx);}
         if(h.includes('s')){el.y=s.y+dy/2;el.h=Math.max(30,s.h+dy);}
         if(h.includes('n')){el.y=s.y+dy/2;el.h=Math.max(30,s.h-dy);}
       } else if (el.type==='trustzone') {
@@ -251,6 +254,13 @@ const Diagram = (() => {
       for(let i=1;i<=2;i++) g.appendChild(makeSVG('line',{
         x1:el.x-hw+6,y1:el.y-hh+el.h/3*i,x2:el.x+hw-6,y2:el.y-hh+el.h/3*i,stroke:'#94a3b8','stroke-width':1}));
       appendLabel(g,el);
+    } else if (el.type==='external') {
+      // Double-border rectangle — standard DFD external entity notation
+      const [hw,hh]=[el.w/2,el.h/2];
+      const stroke=isSel?'#3b82f6':'#1e293b';
+      g.appendChild(makeSVG('rect',{x:el.x-hw,  y:el.y-hh,  width:el.w,  height:el.h,  fill:'#fff',stroke,  'stroke-width':isSel?2.5:2}));
+      g.appendChild(makeSVG('rect',{x:el.x-hw+5,y:el.y-hh+5,width:el.w-10,height:el.h-10,fill:'none',stroke,'stroke-width':1}));
+      appendLabel(g,el);
     } else if (el.type==='trustzone') {
       g.appendChild(makeSVG('rect',{x:el.x,y:el.y,width:el.w,height:el.h,
         class:'element-trustzone',stroke:isSel?'#f87171':'#ef4444'}));
@@ -269,7 +279,7 @@ const Diagram = (() => {
     if (isSel) {
       const ring=el.type==='process'
         ? makeSVG('circle',{cx:el.x,cy:el.y,r:el.r+5,class:'selected-ring'})
-        : el.type==='store'
+        : (el.type==='store'||el.type==='external')
           ? makeSVG('rect',{x:el.x-el.w/2-5,y:el.y-el.h/2-5,width:el.w+10,height:el.h+10,rx:6,class:'selected-ring'})
           : null;
       if (ring) g.appendChild(ring);
@@ -297,7 +307,7 @@ const Diagram = (() => {
     const hit=makeSVG('line',{x1:rawS.x,y1:rawS.y,x2:rawT.x,y2:rawT.y,class:'conn-hit'});
     hit.addEventListener('click',()=>selectConn(c.id)); g.appendChild(hit);
     const markerEnd  =isSel?'url(#arrowSel)':'url(#arrow)';
-    const markerStart=dir==='bidirectional'?(isSel?'url(#arrowSelRev)':'url(#arrowRev)'):'none';
+    const markerStart=dir==='bidirectional'?(isSel?'url(#arrowBiSel)':'url(#arrowBi)'):'none';
     g.appendChild(makeSVG('line',{x1:s.x,y1:s.y,x2:t.x,y2:t.y,
       stroke:isSel?'#3b82f6':'#475569','stroke-width':isSel?2.5:1.8,
       'marker-end':markerEnd,'marker-start':markerStart}));

@@ -95,7 +95,8 @@ const Assets = (() => {
 
   // ── Helpers ───────────────────────────────────────────────────────────
   function typeChip(type) {
-    const m = { process:'chip-process Process', store:'chip-store Store',
+    const m = { process:'chip-process Process', store:'chip-store Data Store',
+                external:'chip-external External Entity',
                 dataflow:'chip-dataflow Data Flow', trustzone:'chip-tz Trust Zone' };
     const [c,l] = (m[type]||'chip '+type).split(' ');
     return `<span class="chip ${c}">${l}</span>`;
