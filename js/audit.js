@@ -1,11 +1,6 @@
 'use strict';
+// No-op when running without a server — calls silently succeed
 const Audit = (() => {
-  function log(action, details = {}) {
-    fetch('/api/audit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, details }),
-    }).catch(() => {});
-  }
+  function log() {}
   return { log };
 })();

@@ -9,6 +9,7 @@
   <img src="https://img.shields.io/badge/CVSS-4.0-red" />
   <img src="https://img.shields.io/badge/STRIDE-enabled-orange" />
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178c6" />
+  <img src="https://img.shields.io/badge/no%20login%20required-open%20%26%20use-brightgreen" />
 </p>
 
 ---
@@ -51,77 +52,46 @@
 
 ---
 
-## 🚀 Installation
+## 🚀 Getting Started
 
-### Prerequisites
+### Option 1 — Open directly (no server needed)
 
-- [Node.js](https://nodejs.org/) v18 or later
-- npm (bundled with Node.js)
-
-### Steps
+Just open `index.html` in any modern browser:
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/JOSCP1/timmy.git
-cd timmy
-
-# 2. Install dependencies
-npm install
-
-# 3. Start the server
-npm start
+open index.html          # macOS
+start index.html         # Windows
+xdg-open index.html      # Linux
 ```
 
-Then open **http://localhost:3000** in your browser.
+No installation, no build step, no dependencies.
 
-> **Note:** Timmy must be served through Node.js — opening `index.html` directly as a file
-> will not work because authentication and the audit log require the backend API.
+### Option 2 — Serve with Node.js (optional)
 
-### First Login
+Useful if you need to access Timmy over a network or avoid browser file-protocol restrictions.
 
-| Field    | Value   |
-|----------|---------|
-| Username | `admin` |
-| Password | `admin` |
-
-**Change the default password immediately** after first login via Settings → User Management.
-
-### Environment Variables
-
-| Variable         | Default                                        | Description                              |
-|------------------|------------------------------------------------|------------------------------------------|
-| `PORT`           | `3000`                                         | HTTP port the server listens on          |
-| `SESSION_SECRET` | `timmy-dev-secret-change-in-production`        | Secret used to sign session cookies — **must be changed in production** |
-
-Example for production:
 ```bash
-SESSION_SECRET=your-long-random-secret PORT=8080 node server.js
+npm install      # installs Express (only dependency)
+npm start        # serves at http://localhost:3000
 ```
+
+Set a custom port with `PORT=8080 node server.js`.
 
 ### Data Storage
 
-All user data is stored locally in the `data/` directory (created automatically on first run):
+All project data is stored in the **browser's `localStorage`** and never sent anywhere.
+Use **💾 Save As** to download a `.json` backup, and **📂 Open** to restore it.
 
-| File               | Contents                                    |
-|--------------------|---------------------------------------------|
-| `data/users.json`  | Hashed user credentials (bcrypt, cost 10)   |
-| `data/audit.jsonl` | Append-only audit log (JSON Lines format)   |
-
-Project data (diagrams, risks, etc.) is stored in the browser's `localStorage` and can be exported as `.json` files via the Save As button.
-
-> `data/` is git-ignored and never committed to the repository.
-
-### Building TypeScript (optional)
+### Building TypeScript (optional, for contributors)
 
 The compiled JavaScript in `js/` is committed alongside the TypeScript source in `src/`.
 If you modify the TypeScript source, recompile with:
 
 ```bash
-npm run build   # compile once
-npm run watch   # watch mode
+npm install          # installs TypeScript dev dependency
+npm run build        # compile once
+npm run watch        # watch mode
 ```
-
-Requires TypeScript to be installed (included as a dev dependency via `npm install`).
 
 ---
 
@@ -139,8 +109,7 @@ timmy/
 │   ├── threats.ts          # STRIDE threat identification
 │   ├── vulnmgmt.ts         # Risk assessment cards
 │   ├── report.ts           # XML export
-│   ├── audit.ts            # Audit log client
-│   ├── auth.ts             # Authentication (calls backend API)
+│   ├── audit.ts            # Audit stub (no-op without server)
 │   ├── settings.ts         # Settings UI
 │   └── app.ts              # App controller
 ├── js/                     # Compiled JavaScript (generated from src/)
@@ -148,11 +117,8 @@ timmy/
 │   └── style.css           # All styles including night mode
 ├── images/
 │   └── timmy.png           # Application logo
-├── data/                   # Runtime data — git-ignored, auto-created
-│   ├── users.json          # User accounts (bcrypt hashed)
-│   └── audit.jsonl         # Audit log
-├── index.html              # Single-page application shell
-├── server.js               # Express server (auth API + static files)
+├── index.html              # Single-page application (open directly)
+├── server.js               # Optional Express static server
 ├── tsconfig.json           # TypeScript compiler configuration
 └── package.json
 ```
@@ -192,15 +158,13 @@ timmy/
 
 ## 🛠️ Tech Stack
 
-| Layer          | Technology                                          |
-|----------------|-----------------------------------------------------|
-| Frontend       | TypeScript 5 → compiled Vanilla JS (no framework)  |
-| Diagrams       | Custom SVG editor (zero external dependencies)      |
-| Server         | Node.js + Express                                   |
-| Authentication | bcrypt (cost 10) + express-session (server-side)    |
-| SSO            | OpenID Connect / PKCE (Azure AD, Okta, generic)     |
-| Storage        | Browser localStorage + JSON project export          |
-| License        | Apache 2.0                                          |
+| Layer     | Technology                                          |
+|-----------|-----------------------------------------------------|
+| Frontend  | TypeScript 5 → compiled Vanilla JS (no framework)  |
+| Diagrams  | Custom SVG editor (zero external dependencies)      |
+| Server    | Node.js + Express (optional, for network access)    |
+| Storage   | Browser localStorage + JSON project export          |
+| License   | Apache 2.0                                          |
 
 ---
 

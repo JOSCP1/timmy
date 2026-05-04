@@ -4,8 +4,7 @@ const App = (() => {
   let toastTimer    = null;
   let autosaveTimer = null;
 
-  async function init() {
-    await Auth.init();
+  function init() {
     Diagram.init();
     loadFromStorage();
     const lastView = sessionStorage.getItem('timmy_view') || 'threat-modeler';
@@ -86,7 +85,6 @@ const App = (() => {
     a.click(); URL.revokeObjectURL(a.href);
     closeModal();
     toast('Project saved.', 'ok');
-    Audit.log('save_project', { name });
   }
 
   function load() { document.getElementById('fileInput').click(); }
@@ -111,7 +109,6 @@ const App = (() => {
         }
         Assets.refresh(); Storage.save(data);
         toast('Project loaded.', 'ok');
-        Audit.log('load_project', { name: data.projectName });
       } catch(err) { toast('Error: ' + err.message, 'error'); }
       e.target.value = '';
     };
