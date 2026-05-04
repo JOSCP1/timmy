@@ -87,6 +87,26 @@ const Diagram = (() => {
     return el ? { x:el.x, y:el.y } : null;
   }
 
+  // Returns the point on el's boundary that lies on the line toward (towardX, towardY)
+  function edgePoint(el, towardX, towardY) {
+    const dx = towardX - el.x, dy = towardY - el.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist === 0) return { x:el.x, y:el.y };
+    const nx = dx/dist, ny = dy/dist;
+
+    if (el.type === 'process') {
+      const r = el.r || 42;
+      return { x: el.x + nx*r, y: el.y + ny*r };
+    }
+    if (el.type === 'store' || el.type === 'external') {
+      const hw = (el.w||110)/2, hh = (el.h||55)/2;
+      const t  = Math.min(nx!==0 ? hw/Math.abs(nx) : Infinity,
+                          ny!==0 ? hh/Math.abs(ny) : Infinity);
+      return { x: el.x + nx*t, y: el.y + ny*t };
+    }
+    return { x:el.x, y:el.y };
+  }
+
   function getHandles(el) {
     if (el.type==='process') return [{ n:'e', cx:el.x+el.r, cy:el.y }];
     if (el.type==='store'||el.type==='external') {
@@ -297,26 +317,42 @@ const Diagram = (() => {
 
   function renderConn(c) {
     document.getElementById('cn_'+c.id)?.remove();
-    const dir=c.direction||'forward';
-    const rawS=elCenter(c.src), rawT=elCenter(c.tgt);
-    if(!rawS||!rawT) return;
-    // Swap endpoints for backward direction so arrowhead points correctly
-    const [s,t]=dir==='backward'?[rawT,rawS]:[rawS,rawT];
-    const isSel=selected?.type==='conn'&&selected.id===c.id;
-    const g=makeSVG('g',{id:'cn_'+c.id});
-    const hit=makeSVG('line',{x1:rawS.x,y1:rawS.y,x2:rawT.x,y2:rawT.y,class:'conn-hit'});
-    hit.addEventListener('click',()=>selectConn(c.id)); g.appendChild(hit);
-    const markerEnd  =isSel?'url(#arrowSel)':'url(#arrow)';
-    const markerStart=dir==='bidirectional'?(isSel?'url(#arrowBiSel)':'url(#arrowBi)'):'none';
-    g.appendChild(makeSVG('line',{x1:s.x,y1:s.y,x2:t.x,y2:t.y,
-      stroke:isSel?'#3b82f6':'#475569','stroke-width':isSel?2.5:1.8,
-      'marker-end':markerEnd,'marker-start':markerStart}));
-    const mx=(rawS.x+rawT.x)/2, my=(rawS.y+rawT.y)/2;
-    const lbl=makeSVG('text',{x:mx,y:my-7,class:'conn-label'});
-    lbl.textContent=c.name; g.appendChild(lbl);
+    const dir = c.direction || 'forward';
+    const cS  = elCenter(c.src), cT = elCenter(c.tgt);
+    if (!cS || !cT) return;
+
+    // Compute boundary intersection points so arrows start/end at element edges
+    const srcEl = elements.find(e => e.id === c.src);
+    const tgtEl = elements.find(e => e.id === c.tgt);
+    const s = srcEl ? edgePoint(srcEl, cT.x, cT.y) : cS;
+    const t = tgtEl ? edgePoint(tgtEl, cS.x, cS.y) : cT;
+
+    const isSel = selected?.type==='conn' && selected.id===c.id;
+    const g     = makeSVG('g', {id:'cn_'+c.id});
+
+    // Hit-area uses full center-to-center span for easier clicking
+    const hit = makeSVG('line', {x1:cS.x,y1:cS.y,x2:cT.x,y2:cT.y, class:'conn-hit'});
+    hit.addEventListener('click', () => selectConn(c.id));
+    g.appendChild(hit);
+
+    // Direction is expressed only through which end(s) carry an arrowhead
+    const markerStart = (dir==='backward'||dir==='bidirectional')
+      ? (isSel ? 'url(#arrowBiSel)' : 'url(#arrowBi)') : 'none';
+    const markerEnd   = (dir==='forward' ||dir==='bidirectional')
+      ? (isSel ? 'url(#arrowSel)'   : 'url(#arrow)')   : 'none';
+
+    g.appendChild(makeSVG('line', {
+      x1:s.x, y1:s.y, x2:t.x, y2:t.y,
+      stroke: isSel?'#3b82f6':'#475569', 'stroke-width': isSel?2.5:1.8,
+      'marker-start': markerStart, 'marker-end': markerEnd,
+    }));
+
+    const mx=(cS.x+cT.x)/2, my=(cS.y+cT.y)/2;
+    const lbl = makeSVG('text', {x:mx, y:my-7, class:'conn-label'});
+    lbl.textContent = c.name; g.appendChild(lbl);
     if (c.tmId) {
-      const idLbl=makeSVG('text',{x:mx,y:my+6,'text-anchor':'middle','font-size':9,fill:'#94a3b8','pointer-events':'none'});
-      idLbl.textContent=c.tmId; g.appendChild(idLbl);
+      const idLbl = makeSVG('text', {x:mx, y:my+6, 'text-anchor':'middle', 'font-size':9, fill:'#94a3b8', 'pointer-events':'none'});
+      idLbl.textContent = c.tmId; g.appendChild(idLbl);
     }
     layerConn.appendChild(g);
   }
