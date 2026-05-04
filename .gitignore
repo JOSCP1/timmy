@@ -2,3 +2,8 @@ node_modules/
 .DS_Store
 *.log
 .env
+
+# Exported project save files (user data – must not be committed)
+*.json
+!package.json
+!package-lock.json
