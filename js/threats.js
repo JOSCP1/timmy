@@ -16,9 +16,12 @@ const Threats = (() => {
   const THREAT_MAP = {
     process:   ['S','T','R','ID','D','E'],
     store:     ['T','ID','D'],
-    external:  ['S','R'],   // External entities: spoofing identity, repudiation of actions
+    external:  ['S','R'],
+    diamond:   ['T','ID','D','E'],  // Decision node: tampering, disclosure, privilege escalation
+    cylinder:  ['T','ID','D'],      // Database: same as data store
+    actor:     ['S','R'],           // Person/actor: spoofing, repudiation
     dataflow:  ['T','ID','D'],
-    trustzone: [],   // not directly threatened; crossing generates threats on the dataflow
+    trustzone: [],
   };
 
   function identify() {

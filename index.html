@@ -68,8 +68,11 @@
           <div class="tool-group" id="toolGroup">
             <button class="tool-btn active" data-tool="select"     title="Select / Move (V)">↖</button>
             <button class="tool-btn"         data-tool="process"   title="Process – Circle (P)">◯</button>
-            <button class="tool-btn"         data-tool="store"     title="Data Store – Bars (S)">▬</button>
-            <button class="tool-btn"         data-tool="external"  title="External Entity – Rectangle (E)">▭</button>
+            <button class="tool-btn"         data-tool="store"     title="Data Store (S)">▬</button>
+            <button class="tool-btn"         data-tool="external"  title="External Entity (E)">▭</button>
+            <button class="tool-btn"         data-tool="diamond"   title="Diamond / Decision (D)">◇</button>
+            <button class="tool-btn"         data-tool="cylinder"  title="Cylinder / Database (C)">⌗</button>
+            <button class="tool-btn"         data-tool="actor"     title="Actor / Person (A)">🧍</button>
             <button class="tool-btn"         data-tool="dataflow"  title="Data Flow – Arrow (F)">→</button>
             <button class="tool-btn"         data-tool="trustzone" title="Trust Zone – Dashed (T)">⬜</button>
           </div>
@@ -129,6 +132,9 @@
             <option value="process">Process</option>
             <option value="store">Data Store</option>
             <option value="external">External Entity</option>
+            <option value="diamond">Diamond</option>
+            <option value="cylinder">Database</option>
+            <option value="actor">Actor</option>
             <option value="dataflow">Data Flow</option>
           </select>
           <button class="btn btn-ghost btn-sm" onclick="Assets.exportCSV()">⬇ Export CSV</button>

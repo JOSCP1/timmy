@@ -43,6 +43,9 @@ const Diagram = (() => {
       if (e.key==='p'||e.key==='P') setTool('process');
       if (e.key==='s'||e.key==='S') setTool('store');
       if (e.key==='e'||e.key==='E') setTool('external');
+      if (e.key==='d'||e.key==='D') setTool('diamond');
+      if (e.key==='c'||e.key==='C') setTool('cylinder');
+      if (e.key==='a'||e.key==='A') setTool('actor');
       if (e.key==='f'||e.key==='F') setTool('dataflow');
       if (e.key==='t'||e.key==='T') setTool('trustzone');
       if (e.key==='Delete'||e.key==='Backspace') deleteSelected();
@@ -69,7 +72,8 @@ const Diagram = (() => {
   function hitElement(x, y) {
     return elements.slice().reverse().find(el => {
       if (el.type==='process')   return Math.hypot(x-el.x, y-el.y) <= el.r;
-      if (el.type==='store'||el.type==='external')
+      if (el.type==='store'||el.type==='external'||
+          el.type==='diamond'||el.type==='cylinder'||el.type==='actor')
                                  return x>=el.x-el.w/2&&x<=el.x+el.w/2&&y>=el.y-el.h/2&&y<=el.y+el.h/2;
       if (el.type==='trustzone') return x>=el.x&&x<=el.x+el.w&&y>=el.y&&y<=el.y+el.h;
       return false;
@@ -98,10 +102,17 @@ const Diagram = (() => {
       const r = el.r || 42;
       return { x: el.x + nx*r, y: el.y + ny*r };
     }
-    if (el.type === 'store' || el.type === 'external') {
+    if (el.type === 'store' || el.type === 'external' ||
+        el.type === 'cylinder' || el.type === 'actor') {
       const hw = (el.w||110)/2, hh = (el.h||55)/2;
       const t  = Math.min(nx!==0 ? hw/Math.abs(nx) : Infinity,
                           ny!==0 ? hh/Math.abs(ny) : Infinity);
+      return { x: el.x + nx*t, y: el.y + ny*t };
+    }
+    if (el.type === 'diamond') {
+      const hw = (el.w||80)/2, hh = (el.h||60)/2;
+      // |nx|/hw + |ny|/hh = 1/t  →  t = 1/(|nx|/hw + |ny|/hh)
+      const t = 1 / (Math.abs(nx)/hw + Math.abs(ny)/hh);
       return { x: el.x + nx*t, y: el.y + ny*t };
     }
     return { x:el.x, y:el.y };
@@ -109,7 +120,8 @@ const Diagram = (() => {
 
   function getHandles(el) {
     if (el.type==='process') return [{ n:'e', cx:el.x+el.r, cy:el.y }];
-    if (el.type==='store'||el.type==='external') {
+    if (el.type==='store'||el.type==='external'||
+        el.type==='diamond'||el.type==='cylinder'||el.type==='actor') {
       const [hw,hh]=[el.w/2,el.h/2];
       return [{ n:'se',cx:el.x+hw,cy:el.y+hh },{ n:'sw',cx:el.x-hw,cy:el.y+hh },
               { n:'ne',cx:el.x+hw,cy:el.y-hh },{ n:'nw',cx:el.x-hw,cy:el.y-hh }];
@@ -138,9 +150,12 @@ const Diagram = (() => {
       else if (cn) { selectConn(cn.id); }
       else         { clearSelection(); panState={sx:e.clientX,sy:e.clientY,vx:viewBox.x,vy:viewBox.y}; }
     }
-    else if (tool==='process')  addElement({type:'process', x:p.x,y:p.y,r:42,    name:'Process',         cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
+    else if (tool==='process')  addElement({type:'process', x:p.x,y:p.y,r:42,     name:'Process',         cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='store')    addElement({type:'store',   x:p.x,y:p.y,w:110,h:55,name:'Data Store',      cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='external') addElement({type:'external',x:p.x,y:p.y,w:90, h:60, name:'External Entity',cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
+    else if (tool==='diamond')  addElement({type:'diamond', x:p.x,y:p.y,w:100,h:65, name:'Decision',        cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
+    else if (tool==='cylinder') addElement({type:'cylinder',x:p.x,y:p.y,w:80, h:90, name:'Database',        cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
+    else if (tool==='actor')    addElement({type:'actor',   x:p.x,y:p.y,w:50, h:80, name:'Actor',           cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='dataflow') {
       const el=hitElement(p.x,p.y);
       if (el&&el.type!=='trustzone') {
@@ -171,7 +186,8 @@ const Diagram = (() => {
       const el=elements.find(e=>e.id===resizing.elId); if(!el) return;
       const dx=p.x-resizing.startPt.x, dy=p.y-resizing.startPt.y, s=resizing.startEl, h=resizing.handle;
       if (el.type==='process') { el.r=Math.max(25,s.r+dx); }
-      else if (el.type==='store'||el.type==='external') {
+      else if (el.type==='store'||el.type==='external'||
+               el.type==='diamond'||el.type==='cylinder'||el.type==='actor') {
         if(h.includes('e')){el.x=s.x+dx/2;el.w=Math.max(40,s.w+dx);}
         if(h.includes('w')){el.x=s.x+dx/2;el.w=Math.max(40,s.w-dx);}
         if(h.includes('s')){el.y=s.y+dy/2;el.h=Math.max(30,s.h+dy);}
@@ -281,6 +297,46 @@ const Diagram = (() => {
       g.appendChild(makeSVG('rect',{x:el.x-hw,  y:el.y-hh,  width:el.w,  height:el.h,  fill:'#fff',stroke,  'stroke-width':isSel?2.5:2}));
       g.appendChild(makeSVG('rect',{x:el.x-hw+5,y:el.y-hh+5,width:el.w-10,height:el.h-10,fill:'none',stroke,'stroke-width':1}));
       appendLabel(g,el);
+    } else if (el.type==='diamond') {
+      const [hw,hh]=[el.w/2,el.h/2];
+      const sk=isSel?'#3b82f6':'#475569';
+      g.appendChild(makeSVG('polygon',{
+        points:`${el.x},${el.y-hh} ${el.x+hw},${el.y} ${el.x},${el.y+hh} ${el.x-hw},${el.y}`,
+        fill:'#fff',stroke:sk,'stroke-width':isSel?2.5:2}));
+      appendLabel(g,el);
+    } else if (el.type==='cylinder') {
+      const [hw,hh]=[el.w/2,el.h/2];
+      const ry=Math.max(7,hh*0.2);
+      const sk=isSel?'#3b82f6':'#475569', sw=isSel?2.5:2;
+      // Body rect between the two cap centres
+      g.appendChild(makeSVG('rect',{x:el.x-hw,y:el.y-hh+ry,width:el.w,height:el.h-2*ry,
+        fill:'#fff',stroke:sk,'stroke-width':sw,'stroke-dasharray':'none'}));
+      // Top cap (full ellipse, white fill covers rect top edge)
+      g.appendChild(makeSVG('ellipse',{cx:el.x,cy:el.y-hh+ry,rx:hw,ry,
+        fill:'#fff',stroke:sk,'stroke-width':sw}));
+      // Bottom cap (full ellipse, no fill so only outline is visible)
+      g.appendChild(makeSVG('ellipse',{cx:el.x,cy:el.y+hh-ry,rx:hw,ry,
+        fill:'none',stroke:sk,'stroke-width':sw}));
+      appendLabel(g,el);
+    } else if (el.type==='actor') {
+      const [hw,hh]=[el.w/2,el.h/2];
+      const headR=Math.min(hw*0.6,hh*0.28);
+      const headCy=el.y-hh+headR;
+      const bodyTop=headCy+headR, bodyBot=el.y+hh*0.25;
+      const sk=isSel?'#3b82f6':'#475569', sw=2;
+      // Head
+      g.appendChild(makeSVG('circle',{cx:el.x,cy:headCy,r:headR,
+        fill:'#fff',stroke:sk,'stroke-width':sw}));
+      // Body
+      g.appendChild(makeSVG('line',{x1:el.x,y1:bodyTop,x2:el.x,y2:bodyBot,stroke:sk,'stroke-width':sw}));
+      // Arms
+      g.appendChild(makeSVG('line',{x1:el.x-hw*0.8,y1:el.y-hh*0.25,x2:el.x+hw*0.8,y2:el.y-hh*0.25,stroke:sk,'stroke-width':sw}));
+      // Legs
+      g.appendChild(makeSVG('line',{x1:el.x,y1:bodyBot,x2:el.x-hw*0.7,y2:el.y+hh,stroke:sk,'stroke-width':sw}));
+      g.appendChild(makeSVG('line',{x1:el.x,y1:bodyBot,x2:el.x+hw*0.7,y2:el.y+hh,stroke:sk,'stroke-width':sw}));
+      // Name label below the figure
+      const nameLbl=makeSVG('text',{x:el.x,y:el.y+hh+14,class:'element-label'});
+      nameLbl.textContent=el.name; g.appendChild(nameLbl);
     } else if (el.type==='trustzone') {
       g.appendChild(makeSVG('rect',{x:el.x,y:el.y,width:el.w,height:el.h,
         class:'element-trustzone',stroke:isSel?'#f87171':'#ef4444'}));
@@ -289,7 +345,7 @@ const Diagram = (() => {
       lbl.textContent=el.name; g.appendChild(lbl);
     }
 
-    if (el.tmId&&el.type!=='trustzone') {
+    if (el.tmId&&el.type!=='trustzone'&&el.type!=='actor') {
       const idLbl=makeSVG('text',{x:el.x,
         y:el.type==='process'?el.y-el.r-5:el.y-el.h/2-5,
         'text-anchor':'middle','font-size':9,fill:'#94a3b8','pointer-events':'none'});
@@ -299,7 +355,8 @@ const Diagram = (() => {
     if (isSel) {
       const ring=el.type==='process'
         ? makeSVG('circle',{cx:el.x,cy:el.y,r:el.r+5,class:'selected-ring'})
-        : (el.type==='store'||el.type==='external')
+        : (el.type==='store'||el.type==='external'||
+           el.type==='diamond'||el.type==='cylinder'||el.type==='actor')
           ? makeSVG('rect',{x:el.x-el.w/2-5,y:el.y-el.h/2-5,width:el.w+10,height:el.h+10,rx:6,class:'selected-ring'})
           : null;
       if (ring) g.appendChild(ring);
@@ -361,8 +418,10 @@ const Diagram = (() => {
     const lbl=makeSVG('text',{x:el.x,y:el.y,class:'element-label'});
     lbl.textContent=el.name; g.appendChild(lbl);
     if (el.cia) {
-      const cia=makeSVG('text',{x:el.x,
-        y:el.type==='process'?el.y+el.r+10:el.y+el.h/2+13,class:'element-cia'});
+      const ciaY = el.type==='process'  ? el.y+el.r+10
+                 : el.type==='diamond'  ? el.y+el.h/2+13
+                 : el.y+el.h/2+13;
+      const cia=makeSVG('text',{x:el.x,y:ciaY,class:'element-cia'});
       cia.textContent=`C:${el.cia.c} I:${el.cia.i} A:${el.cia.a}`; g.appendChild(cia);
     }
   }
