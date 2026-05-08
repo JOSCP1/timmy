@@ -48,6 +48,9 @@
       <li class="nav-item" data-view="adversal" onclick="App.switchView('adversal')">
         <span class="nav-icon">⚠️</span><span class="nav-label">Adverse Impact</span>
       </li>
+      <li class="nav-item" data-view="attacktrees" onclick="App.switchView('attacktrees')">
+        <span class="nav-icon">🌲</span><span class="nav-label">Attack Trees</span>
+      </li>
     </ul>
     <ul class="nav-list" style="padding-top:0;border-top:1px solid #1e293b">
       <li class="nav-item" data-view="settings" onclick="App.switchView('settings')">
@@ -70,7 +73,6 @@
             <button class="tool-btn"         data-tool="process"   title="Process – Circle (P)">◯</button>
             <button class="tool-btn"         data-tool="store"     title="Data Store (S)">▬</button>
             <button class="tool-btn"         data-tool="external"  title="External Entity (E)">▭</button>
-            <button class="tool-btn"         data-tool="diamond"   title="Diamond / Decision (D)">◇</button>
             <button class="tool-btn"         data-tool="cylinder"  title="Cylinder / Database (C)">⌗</button>
             <button class="tool-btn"         data-tool="actor"     title="Actor / Person (A)">🧍</button>
             <button class="tool-btn"         data-tool="dataflow"  title="Data Flow – Arrow (F)">→</button>
@@ -185,6 +187,20 @@
       </div>
     </section>
 
+    <!-- ══ ATTACK TREES VIEW ═════════════════════════════════════════════ -->
+    <section class="view" id="view-attacktrees">
+      <div class="view-header">
+        <h2>Attack Trees</h2>
+        <div class="toolbar-group">
+          <button class="btn btn-primary" onclick="AttackTrees.addTree()">+ New Tree</button>
+          <button class="btn btn-ghost btn-sm" onclick="AttackTrees.addFromThreat()">+ From Identified Risk</button>
+        </div>
+      </div>
+      <div class="at-list" id="atList">
+        <div class="table-empty" id="atEmpty">No attack trees yet. Click "+ New Tree" or build one from an identified risk.</div>
+      </div>
+    </section>
+
     <!-- ══ SETTINGS VIEW ════════════════════════════════════════════════ -->
     <section class="view" id="view-settings">
       <div class="view-header"><h2>Settings</h2></div>
@@ -218,6 +234,7 @@
 <script src="js/vulnmgmt.js"></script>
 <script src="js/report.js"></script>
 <script src="js/audit.js"></script>
+<script src="js/attacktrees.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/app.js"></script>
 </body>

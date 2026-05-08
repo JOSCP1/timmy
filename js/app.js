@@ -19,10 +19,11 @@ const App = (() => {
     document.getElementById('view-' + name)?.classList.add('active');
     document.querySelector(`[data-view="${name}"]`)?.classList.add('active');
     sessionStorage.setItem('timmy_view', name);
-    if (name === 'assets')    Assets.refresh();
-    if (name === 'vuln-mgmt') VulnMgmt.filter(document.getElementById('vulnFilter')?.value || '');
-    if (name === 'adversal')  Adversal.render();
-    if (name === 'settings')  Settings.render();
+    if (name === 'assets')      Assets.refresh();
+    if (name === 'vuln-mgmt')   VulnMgmt.filter(document.getElementById('vulnFilter')?.value || '');
+    if (name === 'adversal')    Adversal.render();
+    if (name === 'attacktrees') AttackTrees.render();
+    if (name === 'settings')    Settings.render();
   }
 
   function autosave() {
@@ -39,6 +40,7 @@ const App = (() => {
       assetOrder:      Assets.getOrder(),
       vulnerabilities: VulnMgmt.getAll(),
       adversal:        Adversal.getAll(),
+      attackTrees:     AttackTrees.getAll(),
     });
   }
 
@@ -56,6 +58,7 @@ const App = (() => {
       data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
       VulnMgmt.setAll(data.vulnerabilities);
     }
+    if (data.attackTrees) AttackTrees.setAll(data.attackTrees);
     Assets.refresh();
   }
 
@@ -107,6 +110,7 @@ const App = (() => {
           data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
           VulnMgmt.setAll(data.vulnerabilities);
         }
+        if (data.attackTrees) AttackTrees.setAll(data.attackTrees);
         Assets.refresh(); Storage.save(data);
         toast('Project loaded.', 'ok');
       } catch(err) { toast('Error: ' + err.message, 'error'); }

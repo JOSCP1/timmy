@@ -43,7 +43,6 @@ const Diagram = (() => {
       if (e.key==='p'||e.key==='P') setTool('process');
       if (e.key==='s'||e.key==='S') setTool('store');
       if (e.key==='e'||e.key==='E') setTool('external');
-      if (e.key==='d'||e.key==='D') setTool('diamond');
       if (e.key==='c'||e.key==='C') setTool('cylinder');
       if (e.key==='a'||e.key==='A') setTool('actor');
       if (e.key==='f'||e.key==='F') setTool('dataflow');
@@ -153,7 +152,6 @@ const Diagram = (() => {
     else if (tool==='process')  addElement({type:'process', x:p.x,y:p.y,r:42,     name:'Process',         cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='store')    addElement({type:'store',   x:p.x,y:p.y,w:110,h:55,name:'Data Store',      cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='external') addElement({type:'external',x:p.x,y:p.y,w:90, h:60, name:'External Entity',cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
-    else if (tool==='diamond')  addElement({type:'diamond', x:p.x,y:p.y,w:100,h:65, name:'Decision',        cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='cylinder') addElement({type:'cylinder',x:p.x,y:p.y,w:80, h:90, name:'Database',        cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='actor')    addElement({type:'actor',   x:p.x,y:p.y,w:50, h:80, name:'Actor',           cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='dataflow') {
@@ -472,53 +470,201 @@ const Diagram = (() => {
     document.getElementById('propsContent').innerHTML='<p class="props-hint">Select an element to edit its properties.</p>';
   }
 
+  // ── Properties panel helpers ──────────────────────────────────────────
+  const PROTOCOLS = ['','HTTP','HTTPS','FTP','FTPS','SSH','Telnet','RDP','VNC',
+    'SMTP','IMAP','POP3','LDAP','RADIUS','DNS','TCP','UDP','TLS','SSL','IPSec',
+    'REST','SOAP','GraphQL','WebSocket','gRPC',
+    'ODBC','JDBC','SQL/TCP','HL7 v2','HL7 FHIR','DICOM','X12 EDI','NCPDP',
+    'MQTT','AMQP','Kafka','SMB','NFS','OPC-UA','Modbus','Other'];
+
+  const ENC_ALGOS = ['AES-256','AES-128','3DES','DES','BitLocker','VeraCrypt',
+    'TLS 1.3','TLS 1.2','SSL','RSA-4096','RSA-2048','ECC','PGP',
+    'AWS KMS','Azure Key Vault','HSM-backed','Other'];
+
+  function propsField(label, content) {
+    return `<div class="props-field"><label>${label}</label>${content}</div>`;
+  }
+
+  function classificationSection(el) {
+    const cb = (key, label) =>
+      `<label class="checkbox-label"><input type="checkbox" ${el[key]?'checked':''}
+        onchange="Diagram.updateProp('${el.id}','${key}',this.checked)"> ${label}</label>`;
+    return `
+      <div class="props-field">
+        <label>Annotation</label>
+        <textarea rows="2" class="props-textarea" placeholder="Free text notes…"
+          oninput="Diagram.updateProp('${el.id}','annotation',this.value)">${esc(el.annotation||'')}</textarea>
+      </div>
+      <div class="props-field">
+        <label>Asset Classification</label>
+        <div class="checkbox-stack">
+          ${cb('isSystemAsset','System Asset')}
+          ${cb('isSupportingAsset','Supporting Asset')}
+          ${cb('isHealthcareAsset','Healthcare Facility Operated Asset')}
+        </div>
+      </div>`;
+  }
+
+  function interfacesSection(el) {
+    const rows = (el.interfaces||[]).map((v,i) => `
+      <div class="list-row">
+        <input type="text" value="${esc(v)}" placeholder="Interface name…"
+          oninput="Diagram.updateInterface('${el.id}',${i},this.value)" />
+        <button class="btn-icon-rm" onclick="Diagram.removeInterface('${el.id}',${i})">✕</button>
+      </div>`).join('');
+    return `<div class="props-field">
+      <label>Interfaces <button class="btn-icon-add" onclick="Diagram.addInterface('${el.id}')">＋</button></label>
+      <div id="iface_${el.id}">${rows}</div></div>`;
+  }
+
+  function servicesSection(el) {
+    const rows = (el.services||[]).map((s,i) => `
+      <div class="list-row">
+        <input type="text" value="${esc(s.name)}" placeholder="Service name"
+          oninput="Diagram.updateService('${el.id}',${i},'name',this.value)" />
+        <input type="text" value="${esc(s.port)}" placeholder="Port" style="width:56px"
+          oninput="Diagram.updateService('${el.id}',${i},'port',this.value)" />
+        <button class="btn-icon-rm" onclick="Diagram.removeService('${el.id}',${i})">✕</button>
+      </div>`).join('');
+    return `<div class="props-field">
+      <label>Services <button class="btn-icon-add" onclick="Diagram.addService('${el.id}')">＋</button></label>
+      <div id="svc_${el.id}">${rows}</div></div>`;
+  }
+
+  function encryptionSection(el) {
+    const algOpts = ENC_ALGOS.map(a =>
+      `<option value="${a}" ${(el.encryptionAlgorithm||'AES-256')===a?'selected':''}>${a}</option>`
+    ).join('');
+    return `<div class="props-field">
+      <label class="checkbox-label" style="font-weight:600">
+        <input type="checkbox" ${el.encrypted?'checked':''}
+          onchange="Diagram.updateProp('${el.id}','encrypted',this.checked)"> Encryption at Rest
+      </label>
+      ${el.encrypted ? `
+        <select style="margin-top:6px;width:100%" onchange="Diagram.updateProp('${el.id}','encryptionAlgorithm',this.value)">${algOpts}</select>
+        ${(el.encryptionAlgorithm||'AES-256')==='Other'?`
+        <input type="text" style="margin-top:4px;width:100%" placeholder="Algorithm name…"
+          value="${esc(el.encryptionOther||'')}"
+          oninput="Diagram.updateProp('${el.id}','encryptionOther',this.value)" />`:''}
+      ` : ''}
+    </div>`;
+  }
+
   function showProps(el) {
     const pc=document.getElementById('propsContent'); if(!pc) return;
-    const ciaSection=el.type==='trustzone'?'':`
-      <div class="props-field">
-        <label>CIA Classification &amp; Justification</label>
+    const disabled='disabled style="color:var(--c-muted);background:#f1f5f9"';
+    const cia = el.type==='trustzone' ? '' : `
+      <div class="props-field"><label>CIA &amp; Justification</label>
         ${ciaJustRow(el.id,'c',el.cia,el.justificationC||'',el.justificationI||'',el.justificationA||'',false)}
         ${ciaJustRow(el.id,'i',el.cia,el.justificationC||'',el.justificationI||'',el.justificationA||'',false)}
         ${ciaJustRow(el.id,'a',el.cia,el.justificationC||'',el.justificationI||'',el.justificationA||'',false)}
       </div>`;
+    const typeSpecific =
+      el.type==='process'                         ? servicesSection(el)
+      : (el.type==='external'||el.type==='actor') ? `${propsField('Authentication',
+          `<input type="text" value="${esc(el.authentication||'')}" placeholder="Authentication method…"
+            oninput="Diagram.updateProp('${el.id}','authentication',this.value)" />`)}
+          ${interfacesSection(el)}`
+      : el.type==='store'||el.type==='cylinder'   ? encryptionSection(el)
+      : '';
+    const common = el.type==='trustzone' ? '' : classificationSection(el);
     pc.innerHTML=`
-      <div class="props-field"><label>ID</label>
-        <input type="text" value="${esc(el.tmId||'')}" disabled style="color:var(--c-muted);background:#f1f5f9" /></div>
-      <div class="props-field"><label>Name</label>
-        <input type="text" value="${esc(el.name)}" onchange="Diagram.updateProp('${el.id}','name',this.value)" /></div>
-      <div class="props-field"><label>Type</label>
-        <input type="text" value="${el.type}" disabled style="color:var(--c-muted);background:#f1f5f9" /></div>
-      ${ciaSection}
-      <div class="props-field" style="margin-top:12px">
+      ${propsField('ID',`<input type="text" value="${esc(el.tmId||'')}" ${disabled}/>`)}
+      ${propsField('Name',`<input type="text" value="${esc(el.name)}"
+        onchange="Diagram.updateProp('${el.id}','name',this.value)" />`)}
+      ${propsField('Type',`<input type="text" value="${el.type}" ${disabled}/>`)}
+      ${cia}${typeSpecific}${common}
+      <div class="props-field" style="margin-top:8px">
         <button class="btn btn-danger btn-sm" onclick="Diagram.deleteSelected()">🗑 Delete</button></div>`;
   }
 
   function showConnProps(c) {
     const pc=document.getElementById('propsContent'); if(!pc) return;
+    const disabled='disabled style="color:var(--c-muted);background:#f1f5f9"';
     const dirOpts=['forward','backward','bidirectional'].map(d=>
       `<option value="${d}" ${(c.direction||'forward')===d?'selected':''}>${d.charAt(0).toUpperCase()+d.slice(1)}</option>`
     ).join('');
+    const protocolOpts = PROTOCOLS.map(p=>
+      `<option value="${p}" ${(c.protocol||'')===p?'selected':''}>${p||'— Select protocol —'}</option>`
+    ).join('');
+    const annot = `
+      <div class="props-field"><label>Annotation</label>
+        <textarea rows="2" class="props-textarea" placeholder="Free text notes…"
+          oninput="Diagram.updateConnProp('${c.id}','annotation',this.value)">${esc(c.annotation||'')}</textarea>
+      </div>
+      <div class="props-field"><label>Asset Classification</label>
+        <div class="checkbox-stack">
+          ${['isSystemAsset','isSupportingAsset','isHealthcareAsset'].map((k,i)=>`
+          <label class="checkbox-label"><input type="checkbox" ${c[k]?'checked':''}
+            onchange="Diagram.updateConnProp('${c.id}','${k}',this.checked)">
+            ${['System Asset','Supporting Asset','Healthcare Facility Operated Asset'][i]}</label>`).join('')}
+        </div>
+      </div>`;
     pc.innerHTML=`
-      <div class="props-field"><label>ID</label>
-        <input type="text" value="${esc(c.tmId||'')}" disabled style="color:var(--c-muted);background:#f1f5f9" /></div>
-      <div class="props-field"><label>Name</label>
-        <input type="text" value="${esc(c.name)}" onchange="Diagram.updateConnProp('${c.id}','name',this.value)" /></div>
-      <div class="props-field"><label>Direction</label>
-        <select onchange="Diagram.updateConnProp('${c.id}','direction',this.value)">${dirOpts}</select></div>
-      <div class="props-field">
-        <label>CIA Classification &amp; Justification</label>
+      ${propsField('ID',`<input type="text" value="${esc(c.tmId||'')}" ${disabled}/>`)}
+      ${propsField('Name',`<input type="text" value="${esc(c.name)}"
+        onchange="Diagram.updateConnProp('${c.id}','name',this.value)" />`)}
+      ${propsField('Direction',`<select onchange="Diagram.updateConnProp('${c.id}','direction',this.value)">${dirOpts}</select>`)}
+      ${propsField('Protocol',`<select onchange="Diagram.updateConnProp('${c.id}','protocol',this.value)">${protocolOpts}</select>`)}
+      <div class="props-field"><label>CIA &amp; Justification</label>
         ${ciaJustRow(c.id,'c',c.cia,c.justificationC||'',c.justificationI||'',c.justificationA||'',true)}
         ${ciaJustRow(c.id,'i',c.cia,c.justificationC||'',c.justificationI||'',c.justificationA||'',true)}
         ${ciaJustRow(c.id,'a',c.cia,c.justificationC||'',c.justificationI||'',c.justificationA||'',true)}
       </div>
-      <div class="props-field" style="margin-top:12px">
+      ${annot}
+      <div class="props-field" style="margin-top:8px">
         <button class="btn btn-danger btn-sm" onclick="Diagram.deleteSelected()">🗑 Delete</button></div>`;
   }
 
-  function updateProp(id,key,val)    { const el=elements.find(e=>e.id===id);    if(el){el[key]=val;renderElement(el);Assets.refresh();App.autosave();} }
+  function updateProp(id, key, val) {
+    const el = elements.find(e => e.id === id);
+    if (!el) return;
+    el[key] = val;
+    if (key === 'name') { renderElement(el); Assets.refresh(); }
+    if (key === 'encrypted' || key === 'encryptionAlgorithm') showProps(el);
+    App.autosave();
+  }
   function updateCIA(id,key,val)     { const el=elements.find(e=>e.id===id);    if(el){el.cia[key]=val;renderElement(el);Assets.refresh();App.autosave();} }
-  function updateConnProp(id,key,val){ const c=connections.find(c=>c.id===id);  if(c){c[key]=val;renderConn(c);Assets.refresh();App.autosave();} }
+  function updateConnProp(id,key,val){ const c=connections.find(c=>c.id===id);  if(c){c[key]=val;if(key==='name'||key==='direction'){renderConn(c);}Assets.refresh();App.autosave();} }
   function updateConnCIA(id,key,val) { const c=connections.find(c=>c.id===id);  if(c){c.cia[key]=val;renderConn(c);Assets.refresh();App.autosave();} }
+
+  // ── Interface / Service mutation helpers ──────────────────────────────
+  function addInterface(elId) {
+    const el = elements.find(e => e.id === elId); if (!el) return;
+    if (!el.interfaces) el.interfaces = [];
+    el.interfaces.push('');
+    showProps(el); App.autosave();
+    requestAnimationFrame(() => {
+      const inputs = document.querySelectorAll(`#iface_${elId} input`);
+      inputs[inputs.length-1]?.focus();
+    });
+  }
+  function updateInterface(elId, idx, val) {
+    const el = elements.find(e => e.id === elId);
+    if (el && el.interfaces) { el.interfaces[idx] = val; App.autosave(); }
+  }
+  function removeInterface(elId, idx) {
+    const el = elements.find(e => e.id === elId);
+    if (el && el.interfaces) { el.interfaces.splice(idx, 1); showProps(el); App.autosave(); }
+  }
+  function addService(elId) {
+    const el = elements.find(e => e.id === elId); if (!el) return;
+    if (!el.services) el.services = [];
+    el.services.push({ name:'', port:'' });
+    showProps(el); App.autosave();
+    requestAnimationFrame(() => {
+      const inputs = document.querySelectorAll(`#svc_${elId} input`);
+      inputs[inputs.length-2]?.focus();
+    });
+  }
+  function updateService(elId, idx, field, val) {
+    const el = elements.find(e => e.id === elId);
+    if (el && el.services && el.services[idx]) { el.services[idx][field] = val; App.autosave(); }
+  }
+  function removeService(elId, idx) {
+    const el = elements.find(e => e.id === elId);
+    if (el && el.services) { el.services.splice(idx, 1); showProps(el); App.autosave(); }
+  }
 
   function zoomIn()    { viewBox.w*=0.85;viewBox.h*=0.85;applyViewBox(); }
   function zoomOut()   { viewBox.w*=1.18;viewBox.h*=1.18;applyViewBox(); }
@@ -552,9 +698,20 @@ const Diagram = (() => {
 
   function getData()  { return { elements, connections, uid }; }
   function setData(d) {
-    elements    = (d.elements||[]).map(el=>({justificationC:'',justificationI:'',justificationA:'',justification:'',...el,tmId:el.tmId||IDCounter.nextTM()}));
-    connections = (d.connections||[]).map(c =>({justificationC:'',justificationI:'',justificationA:'',justification:'',direction:'forward',...c,tmId:c.tmId||IDCounter.nextTM()}));
-    uid=d.uid||elements.length+connections.length+1;
+    elements = (d.elements||[]).map(el => ({
+      justificationC:'', justificationI:'', justificationA:'', justification:'',
+      annotation:'', isSystemAsset:false, isSupportingAsset:false, isHealthcareAsset:false,
+      interfaces:[], services:[], authentication:'',
+      encrypted:false, encryptionAlgorithm:'AES-256', encryptionOther:'',
+      ...el, tmId: el.tmId || IDCounter.nextTM(),
+    }));
+    connections = (d.connections||[]).map(c => ({
+      justificationC:'', justificationI:'', justificationA:'', justification:'',
+      direction:'forward', protocol:'',
+      annotation:'', isSystemAsset:false, isSupportingAsset:false, isHealthcareAsset:false,
+      ...c, tmId: c.tmId || IDCounter.nextTM(),
+    }));
+    uid = d.uid || elements.length + connections.length + 1;
     renderAll(); clearSelection(); Assets.refresh();
   }
 
@@ -574,5 +731,7 @@ const Diagram = (() => {
 
   return { init, getData, setData, getAllAssets, getElements, getConnections,
            deleteSelected, updateProp, updateCIA, updateConnProp, updateConnCIA,
-           zoomIn, zoomOut, resetView, exportSVG, focusElement };
+           zoomIn, zoomOut, resetView, exportSVG, focusElement,
+           addInterface, updateInterface, removeInterface,
+           addService, updateService, removeService };
 })();
