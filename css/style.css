@@ -21,6 +21,7 @@
 
 /* ═══ RESET ════════════════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { overflow-x: hidden; }
 body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
        background: var(--c-bg); color: var(--c-text); height: 100vh; overflow: hidden; }
 
@@ -74,8 +75,8 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
 .version { color: #475569; font-size: 11px; }
 
 /* ─── Main Content ─── */
-.main-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-.view { display: none; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
+.main-content { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+.view { display: none; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; min-height: 0; }
 .view.active { display: flex; }
 
 .view-header {
