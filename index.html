@@ -42,7 +42,7 @@
         <span class="badge" id="assetsBadge">0</span>
       </li>
       <li class="nav-item" data-view="vuln-mgmt" onclick="App.switchView('vuln-mgmt')">
-        <span class="nav-icon">🛡️</span><span class="nav-label">Risk Assessment</span>
+        <span class="nav-icon">🛡️</span><span class="nav-label">Threats</span>
         <span class="badge badge-red" id="vulnBadge">0</span>
       </li>
       <li class="nav-item" data-view="adversal" onclick="App.switchView('adversal')">
@@ -153,10 +153,10 @@
       </div>
     </section>
 
-    <!-- ══ RISK ASSESSMENT VIEW ═══════════════════════════════════════════ -->
+    <!-- ══ THREATS VIEW ══════════════════════════════════════════════════ -->
     <section class="view" id="view-vuln-mgmt">
       <div class="view-header">
-        <h2>Risk Assessment</h2>
+        <h2>Threats</h2>
         <div class="toolbar-group">
           <button class="btn btn-primary btn-sm" onclick="VulnMgmt.addManual()">+ Add Manual</button>
           <select id="vulnFilter" onchange="VulnMgmt.filter(this.value)" class="filter-select">
@@ -166,11 +166,19 @@
             <option value="Mitigated">Mitigated</option>
             <option value="Accepted">Accepted</option>
           </select>
+          <button class="btn btn-ghost btn-sm" onclick="VulnMgmt.toggleBin()" title="Show / hide archived No Threat items">🗑</button>
           <button class="btn btn-secondary" onclick="Report.exportXML()">📄 Export XML</button>
         </div>
       </div>
       <div class="vuln-list" id="vulnList">
-        <div class="table-empty" id="vulnEmpty">No risks yet. Run "Identify Threats" or click "+ Add Manual".</div>
+        <div class="table-empty" id="vulnEmpty">No threats yet. Run "Identify Threats" or click "+ Add Manual".</div>
+      </div>
+      <div class="vuln-bin" id="vulnBin" style="display:none">
+        <div class="vuln-bin-header">
+          <span>🗑 Archived — No Threat</span>
+          <button class="btn btn-ghost btn-sm" onclick="VulnMgmt.toggleBin()">✕ Close</button>
+        </div>
+        <div id="vulnBinList"></div>
       </div>
     </section>
 

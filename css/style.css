@@ -309,10 +309,51 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
 
 /* ═══ MISC ═════════════════════════════════════════════════════════════ */
 .status-select { padding: 3px 8px; border-radius: 4px; border: 1px solid var(--c-border); font-size: 12px; }
-.status-open    { background: #fee2e2; color: #b91c1c; }
+.status-open       { background: #fee2e2; color: #b91c1c; }
 .status-inprogress { background: #fef9c3; color: #854d0e; }
 .status-mitigated  { background: #dcfce7; color: #15803d; }
 .status-accepted   { background: #e0e7ff; color: #4338ca; }
+.status-nothreat   { background: #f1f5f9; color: #64748b; }
+
+/* Attack tree button in threat card header */
+.btn-at-link { background:none; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer;
+               font-size:13px; padding:2px 6px; flex-shrink:0; }
+.btn-at-link:hover { background:#f0fdf4; border-color:#22c55e; }
+.btn-at-create { border-color:#86efac; }
+
+/* No Threat bin */
+.vuln-bin { border-top:2px dashed var(--c-border); padding:12px 20px; background:#fafafa; }
+.vuln-bin-header { display:flex; align-items:center; justify-content:space-between;
+                   font-size:13px; font-weight:600; color:var(--c-muted); margin-bottom:10px; }
+.vuln-bin-item { display:flex; align-items:center; gap:8px; padding:6px 10px;
+                 background:var(--c-surface); border:1px solid var(--c-border);
+                 border-radius:4px; margin-bottom:5px; font-size:12px; flex-wrap:wrap; }
+html.night-mode .vuln-bin { background:#0d1117; }
+html.night-mode .vuln-bin-item { background:#1c2128; border-color:#30363d; }
+
+/* Threat link inside attack tree header */
+.at-threat-link { font-size:11px; color:rgba(255,255,255,.85); background:rgba(255,255,255,.15);
+                  padding:2px 8px; border-radius:10px; text-decoration:none;
+                  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; }
+.at-threat-link:hover { background:rgba(255,255,255,.25); }
+
+/* CEM attack potential in node modal */
+.at-cem-section { grid-column:1/-1; background:#f8fafc; border:1px solid var(--c-border);
+                  border-radius:6px; padding:12px; }
+.at-cem-title   { font-size:12px; font-weight:600; color:var(--c-muted); text-transform:uppercase;
+                  letter-spacing:.4px; margin-bottom:10px; }
+.at-cem-grid    { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.at-ap-display  { margin-top:10px; padding:6px 10px; border-radius:4px;
+                  font-size:12px; font-weight:600; text-align:center; }
+.at-ap-basic          { background:#dcfce7; color:#15803d; }
+.at-ap-enhanced-basic { background:#d1fae5; color:#065f46; }
+.at-ap-moderate       { background:#fef9c3; color:#854d0e; }
+.at-ap-high           { background:#fee2e2; color:#b91c1c; }
+.at-ap-beyond-high    { background:#f3e8ff; color:#6d28d9; }
+
+/* CEM level chip on node cards */
+.at-node-cem { font-size:10px; padding:3px 8px; border-bottom:1px solid var(--c-border);
+               overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 /* ═══ PROPS PANEL EXTENSIONS ════════════════════════════════════════════ */
 .props-textarea {
   width: 100%; padding: 5px 7px; border: 1px solid var(--c-border);

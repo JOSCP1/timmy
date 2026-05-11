@@ -61,7 +61,9 @@ const VulnMgmt = (() => {
     const diagramAssetIds = new Set(Object.keys(assetIndex));
 
     // Only show vulns belonging to the current model (matched asset) or manually added (no assetId)
+    // "No Threat" items are always hidden from the main list (use bin to access them)
     const shown = vulns.filter(v =>
+      v.status !== 'No Threat' &&
       (!v.assetId || diagramAssetIds.has(v.assetId)) &&
       (!filterStatus || v.status === filterStatus)
     );
@@ -77,8 +79,15 @@ const VulnMgmt = (() => {
       const q     = CVSS4.qualitative(v.cvssScore);
       const score = `<span class="score-badge ${q.cls}">${v.cvssScore||'—'}</span>`;
       const statusCls = { 'Open':'status-open','In Progress':'status-inprogress',
-                          'Mitigated':'status-mitigated','Accepted':'status-accepted' };
+                          'Mitigated':'status-mitigated','Accepted':'status-accepted',
+                          'No Threat':'status-nothreat' };
       const stCls = statusCls[v.status] || '';
+      const linkedTree = AttackTrees.getByThreatId(v.id);
+      const atBtn = linkedTree
+        ? `<button class="btn-at-link" title="View Attack Tree"
+             onclick="event.stopPropagation();App.switchView('attacktrees');AttackTrees.scrollTo('${linkedTree.id}')">🌲</button>`
+        : `<button class="btn-at-link btn-at-create" title="Create Attack Tree"
+             onclick="event.stopPropagation();AttackTrees.createFromThreat('${v.id}')">🌲＋</button>`;
       const div   = document.createElement('div');
       div.innerHTML = `
         <div class="vuln-card" id="vcard_${v.id}">
@@ -88,8 +97,9 @@ const VulnMgmt = (() => {
             <span class="vuln-title">${esc(v.name)}</span>
             <span class="vuln-category">${esc(v.category)}</span>
             <span class="vuln-asset">📦 ${esc(v.assetName)}</span>
+            ${atBtn}
             <select class="status-select ${stCls}" onchange="VulnMgmt.setStatus('${v.id}',this.value)" onclick="event.stopPropagation()">
-              ${['Open','In Progress','Mitigated','Accepted'].map(s=>
+              ${['Open','In Progress','Mitigated','Accepted','No Threat'].map(s=>
                 `<option value="${s}" ${v.status===s?'selected':''}>${s}</option>`).join('')}
             </select>
             <span class="vuln-chevron">▾</span>
@@ -230,7 +240,47 @@ const VulnMgmt = (() => {
 
   function setStatus(id, val) {
     const v = vulns.find(v => v.id === id);
-    if (v) { v.status = val; updateBadge(); App.autosave(); }
+    if (!v) return;
+    v.status = val;
+    if (val === 'No Threat') render(); // remove card from main list immediately
+    updateBadge(); App.autosave();
+    if (_binOpen) renderBin();
+  }
+
+  // ── No-Threat bin ──────────────────────────────────────────────────────
+  let _binOpen = false;
+
+  function toggleBin() {
+    _binOpen = !_binOpen;
+    const bin = document.getElementById('vulnBin');
+    if (!bin) return;
+    bin.style.display = _binOpen ? 'block' : 'none';
+    if (_binOpen) renderBin();
+  }
+
+  function renderBin() {
+    const binList = document.getElementById('vulnBinList'); if (!binList) return;
+    const diagramAssetIds = new Set(Diagram.getAllAssets().map(a => a.id));
+    const binItems = vulns.filter(v =>
+      v.status === 'No Threat' &&
+      (!v.assetId || diagramAssetIds.has(v.assetId))
+    );
+    if (!binItems.length) { binList.innerHTML = '<p style="color:var(--c-muted);font-size:12px;padding:8px 0">No archived threats.</p>'; return; }
+    binList.innerHTML = binItems.map(v => {
+      const q = CVSS4.qualitative(v.cvssScore);
+      return `<div class="vuln-bin-item">
+        <span class="id-chip">${esc(v.vulnId||'')}</span>
+        <span class="score-badge ${q.cls}" style="font-size:10px">${v.cvssScore||'—'}</span>
+        <span style="flex:1;font-size:12px;font-weight:500">${esc(v.name)}</span>
+        <span style="font-size:11px;color:var(--c-muted)">${esc(v.assetName)}</span>
+        <select class="status-select" style="font-size:11px"
+          onchange="VulnMgmt.setStatus('${v.id}',this.value);VulnMgmt.renderBin()">
+          <option value="No Threat" selected>No Threat</option>
+          ${['Open','In Progress','Mitigated','Accepted'].map(s=>
+            `<option value="${s}">${s}</option>`).join('')}
+        </select>
+      </div>`;
+    }).join('');
   }
 
   function remove(id) {
@@ -255,7 +305,10 @@ const VulnMgmt = (() => {
 
   function updateBadge() {
     const diagramAssetIds = new Set(Diagram.getAllAssets().map(a => a.id));
-    const count = vulns.filter(v => !v.assetId || diagramAssetIds.has(v.assetId)).length;
+    const count = vulns.filter(v =>
+      v.status !== 'No Threat' &&
+      (!v.assetId || diagramAssetIds.has(v.assetId))
+    ).length;
     document.getElementById('vulnBadge').textContent = count;
   }
 
@@ -269,6 +322,7 @@ const VulnMgmt = (() => {
   return {
     importThreats, addManual, toggleCard,
     update, updateCVSS, applyAdversal, setStatus, remove, duplicate,
-    filter: filterFn, getAll, setAll
+    filter: filterFn, getAll, setAll,
+    toggleBin, renderBin,
   };
 })();
