@@ -258,12 +258,23 @@ const RacAssessment = (() => {
 
         <div class="rac-section" style="background:#f8fafc">
           <div class="rac-section-title" style="background:transparent;color:var(--c-muted)">Threat Reference</div>
-          <div style="padding:10px 14px">
-            ${linked
-              ? `<a class="affected-item-link" href="#"
-                   onclick="App.switchView('vuln-mgmt');VulnMgmt.toggleCard('${linked.id}');return false;">
-                   <span class="id-chip">${esc(linked.vulnId||'')}</span> ${esc(linked.name)}</a>`
-              : `<span style="color:var(--c-muted);font-size:12px">No threat linked — re-create entry to import from a threat.</span>`}
+          <div style="padding:10px 14px;display:flex;flex-direction:column;gap:10px">
+            <div class="form-field">
+              <label>Linked Threat</label>
+              <select id="r_linkedThreat" style="width:100%">
+                <option value="">— None —</option>
+                ${VulnMgmt.getAll().map(v =>
+                  `<option value="${v.id}" ${e.linkedThreatId===v.id?'selected':''}>[${esc(v.vulnId||'')}] ${esc(v.name)}</option>`
+                ).join('')}
+              </select>
+            </div>
+            <label class="checkbox-label">
+              <input type="checkbox" id="r_reimport" />
+              Re-import CVSS, privacy/safety impact, affected asset, controls and notes from the selected threat
+            </label>
+            ${linked ? `<a class="affected-item-link" style="align-self:flex-start" href="#"
+              onclick="App.switchView('vuln-mgmt');VulnMgmt.toggleCard('${linked.id}');return false;">
+              <span class="id-chip">${esc(linked.vulnId||'')}</span> Jump to current threat ↗</a>` : ''}
           </div>
         </div>
 
@@ -319,6 +330,28 @@ const RacAssessment = (() => {
     e.decisionAuthority         = g('r_decAuth');
     e.decisionDate              = g('r_decDate');
     e.comments                  = g('r_comments');
+
+    // Threat reference — update link and optionally re-import values
+    const newThreatId = document.getElementById('r_linkedThreat')?.value || '';
+    const reimport    = document.getElementById('r_reimport')?.checked || false;
+    e.linkedThreatId  = newThreatId;
+    if (reimport && newThreatId) {
+      const threat = VulnMgmt.getAll().find(v => v.id === newThreatId);
+      if (threat) {
+        e.shortDescription         = threat.name;
+        e.longDescription          = threat.description          || e.longDescription;
+        e.affectedAssets           = threat.assetName            || e.affectedAssets;
+        e.cvss                     = { ...threat.cvss };
+        e.cvssScore                = threat.cvssScore || 0;
+        e.cvssVector               = threat.cvssScore ? CVSS4.vector(threat.cvss) : '';
+        e.initialRating            = threat.cvssScore ? CVSS4.qualitative(threat.cvssScore).label : '';
+        e.privacyImpact            = threat.privacyImpact        || 'None';
+        e.safetyImpact             = threat.safetyImpact         || 'None';
+        e.existingControlMeasures  = threat.controls             || e.existingControlMeasures;
+        e.implementationReference  = threat.controlRef           || e.implementationReference;
+        e.comments                 = threat.notes                || e.comments;
+      }
+    }
 
     const modal = document.getElementById('modal');
     if (modal) modal.style.width = '';
