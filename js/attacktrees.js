@@ -278,29 +278,22 @@ const AttackTrees = (() => {
     return f;
   }
 
-  function nodeFormHTML(n) {
+  function nodeFormHTML(n, isRoot = false) {
     const af = n?.attackFactors || { ...DEFAULT_FACTORS };
     const ap = calcAttackPotential(af);
-    const diffOpts = ['Trivial','Low','Medium','High','Expert'].map(d =>
-      `<option value="${d}" ${(n?.difficulty||'Medium')===d?'selected':''}>${d}</option>`).join('');
-    const costOpts = ['None','Low','Medium','High','Very High'].map(c =>
-      `<option value="${c}" ${(n?.cost||'Low')===c?'selected':''}>${c}</option>`).join('');
-    const skillOpts = ['Script Kiddie','Hacktivist','Insider','Criminal Group','Nation State'].map(s =>
-      `<option value="${s}" ${(n?.attackerSkill||'Hacktivist')===s?'selected':''}>${s}</option>`).join('');
     const detOpts = ['Unlikely','Possible','Likely','Almost Certain'].map(d =>
       `<option value="${d}" ${(n?.detection||'Possible')===d?'selected':''}>${d}</option>`).join('');
-    return `
-      <div class="vuln-form">
-        <div class="form-field full"><label>Name / Attack Step</label>
-          <input type="text" id="atn_name" value="${esc(n?.name||'')}" placeholder="Describe the attack step…" /></div>
+    const gateField = isRoot ? '' : `
         <div class="form-field"><label>Node Type (Gate)</label>
           <select id="atn_type">
             <option value="OR"  ${(n?.type||'OR')==='OR' ?'selected':''}>OR — any child path suffices</option>
             <option value="AND" ${(n?.type||'OR')==='AND'?'selected':''}>AND — all child paths required</option>
-          </select></div>
-        <div class="form-field"><label>Attacker Skill</label><select id="atn_skill">${skillOpts}</select></div>
-        <div class="form-field"><label>Attack Difficulty</label><select id="atn_diff">${diffOpts}</select></div>
-        <div class="form-field"><label>Resource Cost</label><select id="atn_cost">${costOpts}</select></div>
+          </select></div>`;
+    return `
+      <div class="vuln-form">
+        <div class="form-field full"><label>Name${isRoot?' / Attack Goal':' / Attack Step'}</label>
+          <input type="text" id="atn_name" value="${esc(n?.name||'')}" placeholder="${isRoot?'The overall attack goal…':'Describe the attack step…'}" /></div>
+        ${gateField}
         <div class="form-field"><label>Detection Likelihood</label><select id="atn_det">${detOpts}</select></div>
         <div class="at-cem-section">
           <div class="at-cem-title">⚙ Attack Potential Factors <span style="font-size:10px;font-weight:400;opacity:.7">(ISO/IEC 18045:2023 CEM)</span></div>
@@ -326,17 +319,14 @@ const AttackTrees = (() => {
 
   function readNodeForm() {
     return {
-      name:                    document.getElementById('atn_name')?.value.trim() || '',
-      type:                    document.getElementById('atn_type')?.value || 'OR',
-      attackFactors:           readFactors(),
-      attackerSkill:           document.getElementById('atn_skill')?.value || 'Hacktivist',
-      difficulty:              document.getElementById('atn_diff')?.value  || 'Medium',
-      cost:                    document.getElementById('atn_cost')?.value  || 'Low',
-      detection:               document.getElementById('atn_det')?.value   || 'Possible',
-      countermeasure:          document.getElementById('atn_cm')?.value    || '',
+      name:         document.getElementById('atn_name')?.value.trim() || '',
+      type:         document.getElementById('atn_type')?.value || 'OR',  // falls back to OR for root (element absent)
+      attackFactors: readFactors(),
+      detection:    document.getElementById('atn_det')?.value   || 'Possible',
+      countermeasure: document.getElementById('atn_cm')?.value  || '',
       countermeasureEffectiveness: parseInt(document.getElementById('atn_cmeff')?.value || '80', 10),
-      mitigated:               document.getElementById('atn_mit')?.checked || false,
-      notes:                   document.getElementById('atn_notes')?.value || '',
+      mitigated:    document.getElementById('atn_mit')?.checked || false,
+      notes:        document.getElementById('atn_notes')?.value || '',
     };
   }
 
@@ -358,7 +348,8 @@ const AttackTrees = (() => {
   function editNode(treeId, nodeId) {
     const tree = trees.find(t => t.id === treeId); if (!tree) return;
     const node = tree.nodes.find(n => n.id === nodeId); if (!node) return;
-    App.openModal('Edit Node', nodeFormHTML(node),
+    const isRoot = node.parentId === null;
+    App.openModal(isRoot ? 'Edit Attack Goal' : 'Edit Node', nodeFormHTML(node, isRoot),
       `<button class="btn btn-ghost" onclick="App.closeModal()">Cancel</button>
        <button class="btn btn-primary" onclick="AttackTrees.confirmEditNode('${treeId}','${nodeId}')">Save</button>`);
   }
@@ -449,21 +440,21 @@ const AttackTrees = (() => {
       const ap   = calcAttackPotential(n.attackFactors || DEFAULT_FACTORS);
       const p    = calcProbability(tree.nodes, n.id);
       const rl   = RISK_LEVEL(p * risk.impact);
-      const isCrit = cpIds.has(n.id);
+      const isCrit  = cpIds.has(n.id);
+      const isRootN = n.parentId === null;
       const typeClr = n.type === 'OR' ? '#3b82f6' : '#db2777';
-      const apCls = `at-ap-${ap.level.replace(/[\s\/]+/g,'-').toLowerCase()}`;
+      const apCls   = `at-ap-${ap.level.replace(/[\s\/]+/g,'-').toLowerCase()}`;
 
       return `
         <div class="at-node-card ${rl.cls} ${isCrit?'at-critical-path':''}"
              style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${NODE_W}px">
           <div class="at-node-header">
-            <span class="at-gate" style="background:${typeClr}">${n.type}</span>
+            ${isRootN ? '' : `<span class="at-gate" style="background:${typeClr}">${n.type}</span>`}
             <span class="at-node-name">${esc(n.name)}</span>
             <span class="at-prob-pill">${ap.score}</span>
           </div>
           <div class="at-node-cem ${apCls}">
-            AP: <strong>${ap.level}</strong> (score ${ap.score})
-            · ${esc(n.attackerSkill||'Hacktivist')}
+            AP: <strong>${ap.level}</strong> — score ${ap.score}
           </div>
           ${n.countermeasure?`<div class="at-node-ctrl ${n.mitigated?'at-ctrl-active':''}">🛡 ${esc(n.countermeasure)}${n.mitigated?' ('+n.countermeasureEffectiveness+'%eff.)':''}</div>`:''}
           <div class="at-node-actions">
