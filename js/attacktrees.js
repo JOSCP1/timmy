@@ -171,7 +171,6 @@ const AttackTrees = (() => {
 
   // ── CRUD ───────────────────────────────────────────────────────────────
   function uid() { return 'at_' + Math.random().toString(36).slice(2,9); }
-  function pct(v) { return Math.round(v * 100) + '%'; }
 
   function _createTree(name, linkedThreatId, linkedThreatName) {
     const rootId = uid();
@@ -244,6 +243,11 @@ const AttackTrees = (() => {
 
   function getByThreatId(threatId) {
     return trees.find(t => t.linkedThreatId === threatId) || null;
+  }
+
+  function getTreeRiskScore(threatId) {
+    const tree = getByThreatId(threatId);
+    return tree ? calcTreeRisk(tree) : null;
   }
 
   // ── Node operations ────────────────────────────────────────────────────
@@ -537,7 +541,7 @@ const AttackTrees = (() => {
   }
 
   return {
-    addTree, confirmAddTree, deleteTree, scrollTo, getByThreatId, createFromThreat,
+    addTree, confirmAddTree, deleteTree, scrollTo, getByThreatId, getTreeRiskScore, createFromThreat,
     addNode, confirmAddNode, editNode, confirmEditNode, deleteNode,
     updateTreeName, updateImpact, _recalcNodeForm,
     render, getAll, setAll,

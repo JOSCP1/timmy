@@ -3,7 +3,7 @@
 const Diagram = (() => {
   let elements    = [];
   let connections = [];
-  let selected    = null;
+  let selected    = []; // array of {type:'element'|'conn', id}
   let tool        = 'select';
   let uid         = 1;
 
@@ -145,9 +145,24 @@ const Diagram = (() => {
 
     if (tool==='select') {
       const el=hitElement(p.x,p.y), cn=!el&&hitConnection(p.x,p.y);
-      if (el)      { selectElement(el.id); dragging={id:el.id,ox:p.x-el.x,oy:p.y-el.y}; e.preventDefault(); }
-      else if (cn) { selectConn(cn.id); }
-      else         { clearSelection(); panState={sx:e.clientX,sy:e.clientY,vx:viewBox.x,vy:viewBox.y}; }
+      const addToSel = e.ctrlKey || e.metaKey;
+      if (el) {
+        if (addToSel) { toggleSelectEl(el.id); }
+        else {
+          if (!isSel('element',el.id)) { clearSelection(); pushSel('element',el.id); renderElement(el); showProps(el); }
+          // Build per-element drag offsets for all selected elements
+          const offsets = {};
+          selected.filter(s=>s.type==='element').forEach(s=>{
+            const e2=elements.find(x=>x.id===s.id); if(e2) offsets[s.id]={ox:p.x-e2.x,oy:p.y-e2.y};
+          });
+          dragging={id:el.id, offsets};
+        }
+        e.preventDefault();
+      } else if (cn) { selectConn(cn.id); }
+      else {
+        if (!addToSel) clearSelection();
+        panState={sx:e.clientX,sy:e.clientY,vx:viewBox.x,vy:viewBox.y};
+      }
     }
     else if (tool==='process')  addElement({type:'process', x:p.x,y:p.y,r:42,     name:'Process',         cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
     else if (tool==='store')    addElement({type:'store',   x:p.x,y:p.y,w:110,h:55,name:'Data Store',      cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
@@ -201,8 +216,13 @@ const Diagram = (() => {
       return;
     }
     if (dragging) {
-      const el=elements.find(e=>e.id===dragging.id);
-      if(el){el.x=p.x-dragging.ox;el.y=p.y-dragging.oy;renderElement(el);connections.filter(c=>c.src===el.id||c.tgt===el.id).forEach(renderConn);}
+      const offsets = dragging.offsets || {};
+      const movedIds = new Set();
+      for (const [sid, off] of Object.entries(offsets)) {
+        const el2=elements.find(e=>e.id===sid);
+        if(el2){el2.x=p.x-off.ox;el2.y=p.y-off.oy;renderElement(el2);movedIds.add(sid);}
+      }
+      connections.filter(c=>movedIds.has(c.src)||movedIds.has(c.tgt)).forEach(renderConn);
       return;
     }
     if (drawingTZ&&tempTZ) {
@@ -251,17 +271,18 @@ const Diagram = (() => {
     connections.push(c); renderConn(c); selectConn(c.id); Assets.refresh(); App.autosave();
   }
   function deleteSelected() {
-    if(!selected) return;
-    if(selected.type==='element'){
-      elements=elements.filter(e=>e.id!==selected.id);
-      connections=connections.filter(c=>c.src!==selected.id&&c.tgt!==selected.id);
-      document.getElementById('el_'+selected.id)?.remove();
-      connections.forEach(renderConn);
-    } else {
-      connections=connections.filter(c=>c.id!==selected.id);
-      document.getElementById('cn_'+selected.id)?.remove();
-    }
-    clearSelection(); Assets.refresh(); App.autosave();
+    if(!selected.length) return;
+    const elIds=new Set(selected.filter(s=>s.type==='element').map(s=>s.id));
+    const cnIds=new Set(selected.filter(s=>s.type==='conn').map(s=>s.id));
+    connections=connections.filter(c=>!cnIds.has(c.id)&&!elIds.has(c.src)&&!elIds.has(c.tgt));
+    elements=elements.filter(e=>!elIds.has(e.id));
+    elIds.forEach(id=>document.getElementById('el_'+id)?.remove());
+    cnIds.forEach(id=>document.getElementById('cn_'+id)?.remove());
+    connections.forEach(renderConn);
+    selected=[];
+    const pc=document.getElementById('propsContent');
+    if(pc) pc.innerHTML='<p class="props-hint">Select an element to edit its properties.</p>';
+    Assets.refresh(); App.autosave();
   }
 
   function renderAll() {
@@ -274,7 +295,7 @@ const Diagram = (() => {
   function renderElement(el) {
     document.getElementById('el_'+el.id)?.remove();
     const g=makeSVG('g',{id:'el_'+el.id});
-    const isSel=selected?.type==='element'&&selected.id===el.id;
+    const isSel=selected.some(s=>s.type==='element'&&s.id===el.id);
     const isCSrc=connecting===el.id;
 
     if (el.type==='process') {
@@ -382,7 +403,7 @@ const Diagram = (() => {
     const s = srcEl ? edgePoint(srcEl, cT.x, cT.y) : cS;
     const t = tgtEl ? edgePoint(tgtEl, cS.x, cS.y) : cT;
 
-    const isSel = selected?.type==='conn' && selected.id===c.id;
+    const isSel = selected.some(s=>s.type==='conn'&&s.id===c.id);
     const g     = makeSVG('g', {id:'cn_'+c.id});
 
     // Hit-area uses full center-to-center span for easier clicking
@@ -443,31 +464,59 @@ const Diagram = (() => {
       </div>`;
   }
 
-  function selectElement(id) {
-    const prev=selected;
-    if(prev&&prev.id!==id){ selected=null;
-      if(prev.type==='element'){const e=elements.find(el=>el.id===prev.id);if(e)renderElement(e);}
-      else{const c=connections.find(cn=>cn.id===prev.id);if(c)renderConn(c);}
+  // ── Selection helpers ─────────────────────────────────────────────────
+  function pushSel(type, id) { selected.push({type,id}); }
+
+  function toggleSelectEl(id) {
+    const idx=selected.findIndex(s=>s.type==='element'&&s.id===id);
+    if(idx>=0){
+      selected.splice(idx,1);
+      const el=elements.find(e=>e.id===id); if(el) renderElement(el);
+    } else {
+      pushSel('element',id);
+      const el=elements.find(e=>e.id===id); if(el) renderElement(el);
     }
-    selected={type:'element',id};
+    _updatePropsPanel();
+  }
+
+  function _updatePropsPanel() {
+    const pc=document.getElementById('propsContent'); if(!pc) return;
+    if(selected.length===0){
+      pc.innerHTML='<p class="props-hint">Select an element to edit its properties.</p>';
+    } else if(selected.length===1){
+      const s=selected[0];
+      if(s.type==='element'){const el=elements.find(e=>e.id===s.id);if(el)showProps(el);}
+      else{const c=connections.find(c=>c.id===s.id);if(c)showConnProps(c);}
+    } else {
+      pc.innerHTML=`<p class="props-hint">${selected.length} items selected.</p>
+        <div class="props-field" style="margin-top:10px">
+          <button class="btn btn-danger btn-sm" onclick="Diagram.deleteSelected()">
+            🗑 Delete ${selected.length} items
+          </button>
+        </div>`;
+    }
+  }
+
+  function selectElement(id) {
+    clearSelection();
+    pushSel('element',id);
     const el=elements.find(e=>e.id===id);
     if(el){renderElement(el);showProps(el);}
   }
   function selectConn(id) {
-    const prev=selected;
-    if(prev&&prev.id!==id){ selected=null;
-      if(prev.type==='element'){const e=elements.find(el=>el.id===prev.id);if(e)renderElement(e);}
-      else{const c=connections.find(cn=>cn.id===prev.id);if(c)renderConn(c);}
-    }
-    selected={type:'conn',id};
+    clearSelection();
+    pushSel('conn',id);
     const c=connections.find(c=>c.id===id);
     if(c){renderConn(c);showConnProps(c);}
   }
   function clearSelection() {
-    const prev=selected; selected=null;
-    if(prev?.type==='element'){const el=elements.find(e=>e.id===prev.id);if(el)renderElement(el);}
-    else if(prev?.type==='conn'){const c=connections.find(c=>c.id===prev.id);if(c)renderConn(c);}
-    document.getElementById('propsContent').innerHTML='<p class="props-hint">Select an element to edit its properties.</p>';
+    const prev=[...selected]; selected=[];
+    prev.forEach(s=>{
+      if(s.type==='element'){const el=elements.find(e=>e.id===s.id);if(el)renderElement(el);}
+      else{const c=connections.find(c=>c.id===s.id);if(c)renderConn(c);}
+    });
+    const pc=document.getElementById('propsContent');
+    if(pc) pc.innerHTML='<p class="props-hint">Select an element to edit its properties.</p>';
   }
 
   // ── Properties panel helpers ──────────────────────────────────────────

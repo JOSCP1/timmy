@@ -35,7 +35,7 @@
   <nav class="sidebar">
     <ul class="nav-list">
       <li class="nav-item active" data-view="threat-modeler" onclick="App.switchView('threat-modeler')">
-        <span class="nav-icon">🗺️</span><span class="nav-label">Threat Modeler</span>
+        <span class="nav-icon">🗺️</span><span class="nav-label">Threat Model</span>
       </li>
       <li class="nav-item" data-view="assets" onclick="App.switchView('assets')">
         <span class="nav-icon">📦</span><span class="nav-label">Assets</span>
@@ -69,7 +69,7 @@
     <!-- ══ THREAT MODELER VIEW ════════════════════════════════════════════ -->
     <section class="view active" id="view-threat-modeler">
       <div class="view-header">
-        <h2>Threat Modeler</h2>
+        <h2>Threat Model</h2>
         <div class="toolbar-group">
           <div class="tool-group" id="toolGroup">
             <button class="tool-btn active" data-tool="select"     title="Select / Move (V)">↖</button>
@@ -152,7 +152,7 @@
           </thead>
           <tbody id="assetsTbody"></tbody>
         </table>
-        <div class="table-empty" id="assetsEmpty">No assets yet. Add elements in the Threat Modeler.</div>
+        <div class="table-empty" id="assetsEmpty">No assets yet. Add elements in the Threat Model.</div>
       </div>
     </section>
 
@@ -232,6 +232,7 @@
               <th colspan="6"  class="rac-gh rac-gh-ctrl">Control Measures</th>
               <th colspan="7"  class="rac-gh rac-gh-resid">Residual Risk Evaluation and Treatment Governance</th>
               <th rowspan="2" class="rac-gh rac-gh-threat">Threat</th>
+              <th rowspan="2" class="rac-gh rac-gh-at">AT Risk</th>
             </tr>
             <tr class="rac-col-row">
               <!-- Identification -->
@@ -246,7 +247,7 @@
               <th class="rac-th">Affected Components</th>
               <th class="rac-th">Components Origin</th>
               <!-- Risk Evaluation -->
-              <th class="rac-th">Rational for Applicability</th>
+              <th class="rac-th">Rational for<br>Applicability</th>
               <th class="rac-th">Published CVSS</th>
               <th class="rac-th">CVSS Score</th>
               <th class="rac-th">CVSS Vector</th>

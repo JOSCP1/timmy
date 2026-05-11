@@ -456,7 +456,7 @@ html.night-mode .list-row input  { background: #0d1117; color: var(--c-text); bo
 .rac-th-action { background:#f8fafc; min-width:42px; }
 .rac-th { background:#f1f5f9; padding:5px 7px; font-size:10px; font-weight:600;
           color:var(--c-muted); text-transform:uppercase; letter-spacing:.3px;
-          min-width:90px; max-width:140px; }
+          min-width:90px; max-width:140px; white-space:normal; }
 
 /* Column group header row */
 .rac-gh { padding:6px 10px; font-size:11px; font-weight:700; text-align:center; color:#fff; }
@@ -465,6 +465,7 @@ html.night-mode .list-row input  { background: #0d1117; color: var(--c-text); bo
 .rac-gh-ctrl  { background:#22c55e; color:#14532d; }
 .rac-gh-resid { background:#8b5cf6; }
 .rac-gh-threat{ background:#f59e0b; color:#451a03; min-width:130px; }
+.rac-gh-at    { background:#0f172a; color:#94a3b8; min-width:70px; }
 
 /* Body cells */
 .rac-cell { border:1px solid #e2e8f0; padding:4px 7px; max-width:140px;

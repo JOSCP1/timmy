@@ -41,7 +41,8 @@ const RacAssessment = (() => {
       implementationReference: threat ? (threat.controlRef || '') : '',
       effectivenessReference: '',
       // Residual Risk
-      residualCvssScore: '', residualCvssVector: '',
+      residualCvss: { ...CVSS4.DEFAULTS },
+      residualCvssScore: 0, residualCvssVector: '',
       riskBenefitRating: '', residualRiskAcceptance: '',
       decisionAuthority: '', decisionDate: '',
       comments: threat ? (threat.notes || '') : '',
@@ -128,6 +129,56 @@ const RacAssessment = (() => {
     App.autosave();
   }
 
+  function racResidualCvssHTML(uid_, m = {}) {
+    const v = { ...CVSS4.DEFAULTS, ...m };
+    const sel = (name, opts) =>
+      `<select onchange="RacAssessment.updateResidualCvss('${uid_}','${name}',this.value)">${
+        opts.map(([val,lbl]) =>
+          `<option value="${val}" ${v[name]===val?'selected':''}>${lbl}</option>`
+        ).join('')
+      }</select>`;
+    return `
+      <div class="cvss-section" style="grid-column:1/-1">
+        <h4>CVSS 4.0 — Residual Assessment (after controls)</h4>
+        <div class="cvss-grid">
+          <div class="form-field"><label>AV</label>${sel('AV',[['N','Network'],['A','Adjacent'],['L','Local'],['P','Physical']])}</div>
+          <div class="form-field"><label>AC</label>${sel('AC',[['L','Low'],['H','High']])}</div>
+          <div class="form-field"><label>AT</label>${sel('AT',[['N','None'],['P','Present']])}</div>
+          <div class="form-field"><label>PR</label>${sel('PR',[['N','None'],['L','Low'],['H','High']])}</div>
+          <div class="form-field"><label>UI</label>${sel('UI',[['N','None'],['P','Passive'],['A','Active']])}</div>
+          <div class="form-field"><label>VC</label>${sel('VC',[['N','None'],['L','Low'],['H','High']])}</div>
+          <div class="form-field"><label>VI</label>${sel('VI',[['N','None'],['L','Low'],['H','High']])}</div>
+          <div class="form-field"><label>VA</label>${sel('VA',[['N','None'],['L','Low'],['H','High']])}</div>
+          <div class="form-field"><label>SC</label>${sel('SC',[['N','None'],['L','Low'],['H','High']])}</div>
+          <div class="form-field"><label>SI</label>${sel('SI',[['N','None'],['L','Low'],['H','High'],['S','Safety']])}</div>
+          <div class="form-field"><label>SA</label>${sel('SA',[['N','None'],['L','Low'],['H','High'],['S','Safety']])}</div>
+        </div>
+        <div class="cvss-score-display">
+          <label>Residual Score:</label>
+          <span class="score-value" id="rcvssScore_${uid_}">—</span>
+          <span class="score-label" id="rcvssLabel_${uid_}"></span>
+          <span style="font-size:10px;color:var(--c-muted);margin-left:8px" id="rcvssVector_${uid_}"></span>
+        </div>
+      </div>`;
+  }
+
+  function updateResidualCvss(uid_, metric, val) {
+    const e = entries.find(x => x._uid === uid_); if (!e) return;
+    if (!e.residualCvss) e.residualCvss = { ...CVSS4.DEFAULTS };
+    e.residualCvss[metric] = val;
+    e.residualCvssScore    = CVSS4.score(e.residualCvss);
+    e.residualCvssVector   = CVSS4.vector(e.residualCvss);
+    // Update display using temp element IDs with 'r' prefix
+    const s = e.residualCvssScore, q = CVSS4.qualitative(s);
+    const se = document.getElementById(`rcvssScore_${uid_}`);
+    const le = document.getElementById(`rcvssLabel_${uid_}`);
+    const ve = document.getElementById(`rcvssVector_${uid_}`);
+    if (se) { se.textContent = s; se.className = `score-value ${q.cls}`; }
+    if (le) le.textContent = q.label;
+    if (ve) ve.textContent = e.residualCvssVector;
+    App.autosave();
+  }
+
   // ── Full edit modal ────────────────────────────────────────────────────
   function editEntry(uid_) {
     const e = entries.find(x => x._uid === uid_); if (!e) return;
@@ -194,8 +245,7 @@ const RacAssessment = (() => {
         <div class="rac-section rac-s-resid">
           <div class="rac-section-title">Residual Risk Evaluation and Treatment Governance</div>
           <div class="rac-grid">
-            ${FF('Residual CVSS Score',D('r_resCvss',e.residualCvssScore))}
-            ${FF('Residual CVSS Vector',D('r_resCvssVec',e.residualCvssVector))}
+            ${racResidualCvssHTML(e._uid, e.residualCvss || {})}
             ${FF('Risk Benefit Rating',SEL('r_rbr',e.riskBenefitRating,
               [['','— Select —'],['Acceptable','Acceptable'],['Not Acceptable','Not Acceptable'],['Conditionally Acceptable','Conditionally Acceptable']]))}
             ${FF('Residual Risk Acceptance',SEL('r_rra',e.residualRiskAcceptance,
@@ -226,7 +276,11 @@ const RacAssessment = (() => {
       `<button class="btn btn-ghost" onclick="RacAssessment.cancelEdit()">Cancel</button>
        <button class="btn btn-danger btn-sm" onclick="RacAssessment.deleteEntry('${e._uid}')">🗑 Delete</button>
        <button class="btn btn-primary" onclick="RacAssessment.confirmEdit('${e._uid}')">💾 Save</button>`);
-    requestAnimationFrame(() => CVSS4.updateDisplay(e._uid, e.cvss));
+    requestAnimationFrame(() => {
+      CVSS4.updateDisplay(e._uid, e.cvss);
+      // Init residual CVSS display
+      if (e.residualCvss) updateResidualCvss(e._uid, 'AV', e.residualCvss.AV ?? 'N');
+    });
   }
 
   function cancelEdit() {
@@ -259,8 +313,7 @@ const RacAssessment = (() => {
     e.targetVersion             = g('r_targetVer');
     e.implementationReference   = g('r_implRef');
     e.effectivenessReference    = g('r_effRef');
-    e.residualCvssScore         = g('r_resCvss');
-    e.residualCvssVector        = g('r_resCvssVec');
+    // residualCvssScore / residualCvssVector are updated live by updateResidualCvss()
     e.riskBenefitRating         = g('r_rbr');
     e.residualRiskAcceptance    = g('r_rra');
     e.decisionAuthority         = g('r_decAuth');
@@ -352,6 +405,11 @@ const RacAssessment = (() => {
         ${td(e.decisionDate)}
         ${td(e.comments)}
         <td class="rac-cell">${threatCell}</td>
+        <td class="rac-cell">${(() => {
+          const atRisk = e.linkedThreatId ? AttackTrees.getTreeRiskScore(e.linkedThreatId) : null;
+          if (!atRisk) return '<span style="color:var(--c-muted);font-size:10px">—</span>';
+          return `<span class="score-badge ${atRisk.level.cls}" style="font-size:10px;padding:1px 5px" title="${atRisk.level.lbl}">${atRisk.score}</span>`;
+        })()}</td>
       </tr>`;
     }).join('');
   }
@@ -402,7 +460,9 @@ const RacAssessment = (() => {
     entries = (data.entries || []).map(e => ({
       cvss: { ...CVSS4.DEFAULTS }, cvssScore: 0, cvssVector: '',
       initialRating: '', componentOrigin: 'Internal',
-      privacyImpact: 'None', safetyImpact: 'None', ...e,
+      privacyImpact: 'None', safetyImpact: 'None',
+      residualCvss: { ...CVSS4.DEFAULTS }, residualCvssScore: 0, residualCvssVector: '',
+      ...e,
     }));
     wSeq = data.wSeq || 0;
     vSeq = data.vSeq || 0;
@@ -412,7 +472,7 @@ const RacAssessment = (() => {
   return {
     addEntry, confirmAdd,
     editEntry, cancelEdit, confirmEdit,
-    deleteEntry, updateCvss,
+    deleteEntry, updateCvss, updateResidualCvss,
     exportCSV, render, getAll, setAll,
   };
 })();
