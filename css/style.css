@@ -448,6 +448,57 @@ html.night-mode .at-prob-pill    { background: #0d1117; color: #8b949e; }
 html.night-mode .props-textarea,
 html.night-mode .list-row input  { background: #0d1117; color: var(--c-text); border-color: #30363d; }
 
+/* ═══ RISK ASSESSMENT & CONTROL ════════════════════════════════════════ */
+.rac-table-wrap { flex:1; min-height:0; overflow:auto; }
+.rac-table { border-collapse:collapse; font-size:11px; white-space:nowrap; }
+.rac-table thead { position:sticky; top:0; z-index:2; }
+.rac-group-row th, .rac-col-row th { border:1px solid #cbd5e1; }
+.rac-th-action { background:#f8fafc; min-width:42px; }
+.rac-th { background:#f1f5f9; padding:5px 7px; font-size:10px; font-weight:600;
+          color:var(--c-muted); text-transform:uppercase; letter-spacing:.3px;
+          min-width:90px; max-width:140px; }
+
+/* Column group header row */
+.rac-gh { padding:6px 10px; font-size:11px; font-weight:700; text-align:center; color:#fff; }
+.rac-gh-id    { background:#3b82f6; }
+.rac-gh-risk  { background:#ef4444; }
+.rac-gh-ctrl  { background:#22c55e; color:#14532d; }
+.rac-gh-resid { background:#8b5cf6; }
+.rac-gh-threat{ background:#f59e0b; color:#451a03; min-width:130px; }
+
+/* Body cells */
+.rac-cell { border:1px solid #e2e8f0; padding:4px 7px; max-width:140px;
+            overflow:hidden; text-overflow:ellipsis; vertical-align:middle; }
+.rac-id-cell { font-family:'Courier New',monospace; font-weight:700; font-size:11px;
+               background:#f8fafc; }
+.rac-action-cell { border:1px solid #e2e8f0; padding:3px 5px; background:#f8fafc; }
+.rac-row:hover td { background:#f0f9ff; }
+.rac-row:hover .rac-id-cell, .rac-row:hover .rac-action-cell { background:#e0f2fe; }
+
+/* Edit form (inside wide modal) */
+.rac-form { display:flex; flex-direction:column; gap:16px; }
+.rac-section { border:1px solid var(--c-border); border-radius:var(--radius); overflow:hidden; }
+.rac-section-title {
+  padding:8px 14px; font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.4px; color:#fff;
+}
+.rac-s-id    .rac-section-title { background:#3b82f6; }
+.rac-s-risk  .rac-section-title { background:#ef4444; }
+.rac-s-ctrl  .rac-section-title { background:#22c55e; color:#14532d; }
+.rac-s-resid .rac-section-title { background:#8b5cf6; }
+.rac-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px 14px; }
+.rac-grid .full { grid-column:1/-1; }
+
+/* Night mode */
+html.night-mode .rac-table thead { background:#1c2128; }
+html.night-mode .rac-th,
+html.night-mode .rac-th-action { background:#1c2128; color:#8b949e; border-color:#30363d; }
+html.night-mode .rac-cell,
+html.night-mode .rac-action-cell { border-color:#30363d; }
+html.night-mode .rac-id-cell,
+html.night-mode .rac-action-cell { background:#161b22; }
+html.night-mode .rac-row:hover td { background:#0d2137; }
+
 /* ═══ RESIZE HANDLES ═══════════════════════════════════════════════════ */
 .resize-handle {
   fill: #3b82f6; stroke: #fff; stroke-width: 1.5;

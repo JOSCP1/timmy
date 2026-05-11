@@ -23,6 +23,7 @@ const App = (() => {
     if (name === 'vuln-mgmt')   VulnMgmt.filter(document.getElementById('vulnFilter')?.value || '');
     if (name === 'adversal')    Adversal.render();
     if (name === 'attacktrees') AttackTrees.render();
+    if (name === 'rac')         RacAssessment.render();
     if (name === 'settings')    Settings.render();
   }
 
@@ -41,6 +42,7 @@ const App = (() => {
       vulnerabilities: VulnMgmt.getAll(),
       adversal:        Adversal.getAll(),
       attackTrees:     AttackTrees.getAll(),
+      racAssessment:   RacAssessment.getAll(),
     });
   }
 
@@ -58,7 +60,8 @@ const App = (() => {
       data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
       VulnMgmt.setAll(data.vulnerabilities);
     }
-    if (data.attackTrees) AttackTrees.setAll(data.attackTrees);
+    if (data.attackTrees)   AttackTrees.setAll(data.attackTrees);
+    if (data.racAssessment) RacAssessment.setAll(data.racAssessment);
     Assets.refresh();
   }
 
@@ -110,7 +113,8 @@ const App = (() => {
           data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
           VulnMgmt.setAll(data.vulnerabilities);
         }
-        if (data.attackTrees) AttackTrees.setAll(data.attackTrees);
+        if (data.attackTrees)   AttackTrees.setAll(data.attackTrees);
+        if (data.racAssessment) RacAssessment.setAll(data.racAssessment);
         Assets.refresh(); Storage.save(data);
         toast('Project loaded.', 'ok');
       } catch(err) { toast('Error: ' + err.message, 'error'); }

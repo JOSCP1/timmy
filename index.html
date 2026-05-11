@@ -51,6 +51,9 @@
       <li class="nav-item" data-view="attacktrees" onclick="App.switchView('attacktrees')">
         <span class="nav-icon">🌲</span><span class="nav-label">Attack Trees</span>
       </li>
+      <li class="nav-item" data-view="rac" onclick="App.switchView('rac')">
+        <span class="nav-icon">📋</span><span class="nav-label">Risk Assessment &amp; Control</span>
+      </li>
     </ul>
     <ul class="nav-list" style="padding-top:0;border-top:1px solid #1e293b">
       <li class="nav-item" data-view="settings" onclick="App.switchView('settings')">
@@ -209,6 +212,72 @@
       </div>
     </section>
 
+    <!-- ══ RISK ASSESSMENT & CONTROL VIEW ═══════════════════════════════ -->
+    <section class="view" id="view-rac">
+      <div class="view-header">
+        <h2>Risk Assessment &amp; Control</h2>
+        <div class="toolbar-group">
+          <button class="btn btn-primary btn-sm" onclick="RacAssessment.addEntry('vulnerability')">+ Add Vulnerability</button>
+          <button class="btn btn-secondary btn-sm" onclick="RacAssessment.addEntry('weakness')">+ Add Weakness</button>
+          <button class="btn btn-ghost btn-sm" onclick="RacAssessment.exportCSV()">⬇ Export CSV</button>
+        </div>
+      </div>
+      <div class="rac-table-wrap">
+        <table class="rac-table" id="racTable">
+          <thead>
+            <tr class="rac-group-row">
+              <th rowspan="2" class="rac-th-action"></th>
+              <th colspan="10" class="rac-gh rac-gh-id">Identification — Weaknesses and Vulnerabilities</th>
+              <th colspan="9"  class="rac-gh rac-gh-risk">Risk Evaluation</th>
+              <th colspan="6"  class="rac-gh rac-gh-ctrl">Control Measures</th>
+              <th colspan="7"  class="rac-gh rac-gh-resid">Residual Risk Evaluation and Treatment Governance</th>
+              <th rowspan="2" class="rac-gh rac-gh-threat">Threat</th>
+            </tr>
+            <tr class="rac-col-row">
+              <!-- Identification -->
+              <th class="rac-th">ID</th>
+              <th class="rac-th">Type</th>
+              <th class="rac-th">Origin ID</th>
+              <th class="rac-th">Short Description</th>
+              <th class="rac-th">Long Description</th>
+              <th class="rac-th">Conditions</th>
+              <th class="rac-th">Affected Assets</th>
+              <th class="rac-th">Related Versions</th>
+              <th class="rac-th">Affected Components</th>
+              <th class="rac-th">Components Origin</th>
+              <!-- Risk Evaluation -->
+              <th class="rac-th">Rational for Applicability</th>
+              <th class="rac-th">Published CVSS</th>
+              <th class="rac-th">CVSS Score</th>
+              <th class="rac-th">CVSS Vector</th>
+              <th class="rac-th">Initial Rating</th>
+              <th class="rac-th">Privacy Impact</th>
+              <th class="rac-th">Safety Impact</th>
+              <th class="rac-th">Other Impact</th>
+              <th class="rac-th">Safety Risk Ref.</th>
+              <!-- Control Measures -->
+              <th class="rac-th">Existing Controls</th>
+              <th class="rac-th">Potential Controls</th>
+              <th class="rac-th">Control Selection</th>
+              <th class="rac-th">Target Version</th>
+              <th class="rac-th">Impl. Reference</th>
+              <th class="rac-th">Effectiveness Ref.</th>
+              <!-- Residual Risk -->
+              <th class="rac-th">Residual CVSS</th>
+              <th class="rac-th">Residual Vector</th>
+              <th class="rac-th">Risk Benefit Rating</th>
+              <th class="rac-th">Residual Acceptance</th>
+              <th class="rac-th">Decision Authority</th>
+              <th class="rac-th">Decision Date</th>
+              <th class="rac-th">Comments</th>
+            </tr>
+          </thead>
+          <tbody id="racTbody"></tbody>
+        </table>
+        <div class="table-empty" id="racEmpty">No entries yet. Click "+ Add Vulnerability" or "+ Add Weakness" to create one.</div>
+      </div>
+    </section>
+
     <!-- ══ SETTINGS VIEW ════════════════════════════════════════════════ -->
     <section class="view" id="view-settings">
       <div class="view-header"><h2>Settings</h2></div>
@@ -243,6 +312,7 @@
 <script src="js/report.js"></script>
 <script src="js/audit.js"></script>
 <script src="js/attacktrees.js"></script>
+<script src="js/racassessment.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/app.js"></script>
 </body>
