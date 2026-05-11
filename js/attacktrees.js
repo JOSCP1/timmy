@@ -263,7 +263,7 @@ const AttackTrees = (() => {
     const ap = calcAttackPotential(f);
     const el = document.getElementById('at_ap_display');
     if (el) {
-      el.textContent = `Score: ${ap.score} — ${ap.level} (attack success ≈ ${pct(ap.probability)})`;
+      el.textContent = `Score: ${ap.score} — ${ap.level}`;
       el.className = `at-ap-display at-ap-${ap.level.replace(' ','-').toLowerCase()}`;
     }
   }
@@ -308,7 +308,7 @@ const AttackTrees = (() => {
             ${Object.keys(CEM).map(k => cemFactorSelect(k, af[k] ?? DEFAULT_FACTORS[k])).join('')}
           </div>
           <div id="at_ap_display" class="at-ap-display at-ap-${ap.level.replace(' ','-').toLowerCase()}">
-            Score: ${ap.score} — ${ap.level} (attack success ≈ ${pct(ap.probability)})
+            Score: ${ap.score} — ${ap.level}
           </div>
         </div>
         <div class="form-field full"><label>Countermeasure / Control</label>
@@ -428,6 +428,8 @@ const AttackTrees = (() => {
     const linked = tree.linkedThreatId
       ? VulnMgmt.getAll().find(v => v.id === tree.linkedThreatId) : null;
     const { positions, width, height } = layoutTree(tree);
+    const rootNode = tree.nodes.find(n => n.parentId === null);
+    const rootAP   = calcAttackPotential(rootNode?.attackFactors || DEFAULT_FACTORS);
 
     const lines = tree.nodes
       .filter(n => n.parentId !== null && positions[n.id] && positions[n.parentId])
@@ -457,7 +459,7 @@ const AttackTrees = (() => {
           <div class="at-node-header">
             <span class="at-gate" style="background:${typeClr}">${n.type}</span>
             <span class="at-node-name">${esc(n.name)}</span>
-            <span class="at-prob-pill">${pct(p)}</span>
+            <span class="at-prob-pill">${ap.score}</span>
           </div>
           <div class="at-node-cem ${apCls}">
             AP: <strong>${ap.level}</strong> (score ${ap.score})
@@ -502,7 +504,7 @@ const AttackTrees = (() => {
           <div class="at-risk-score-lbl">${risk.level.lbl} Risk</div>
         </div>
         <div class="at-risk-details">
-          <div>Attack Success Probability: <strong>${pct(risk.probability)}</strong></div>
+          <div>Root AP Score: <strong>${rootAP.score}</strong> — <strong>${rootAP.level}</strong></div>
           <div style="font-size:11px;opacity:.8">Impact: ${risk.impact.toFixed(1)} ${linked?'(CVSS)':'(manual)'}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px">${impactInput}</div>
         </div>
