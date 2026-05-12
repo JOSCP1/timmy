@@ -692,6 +692,28 @@ html.night-mode .rac-row:hover td { background:#0d2137; }
 .settings-section-title h3 { font-size: 14px; font-weight: 600; }
 .settings-body { padding: 18px; }
 
+/* About block */
+.about-block {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+}
+.about-logo { height: 90px; width: auto; border-radius: 8px; }
+.about-text  { display: flex; flex-direction: column; gap: 4px; }
+.about-name  { font-size: 22px; font-weight: 700; color: var(--c-text); }
+.about-desc  { font-size: 13px; color: var(--c-muted); }
+.about-version { font-size: 13px; font-weight: 600; color: var(--c-primary); margin-top: 4px; }
+.about-copy  { font-size: 11px; color: var(--c-muted); margin-top: 2px; }
+
+/* License scroll box */
+.settings-section-license .settings-body { padding: 0; }
+.license-text {
+  display: block; height: 300px; overflow-y: auto;
+  margin: 0; padding: 16px 20px;
+  font-family: 'Courier New', Courier, monospace; font-size: 11px;
+  line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+  color: var(--c-text); background: #f8fafc;
+  border: none; outline: none;
+}
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
@@ -716,6 +738,7 @@ html.night-mode .product-version,
 html.night-mode .props-header,
 html.night-mode .settings-section-title,
 html.night-mode .vuln-card-body { background: #1c2128; }
+html.night-mode .license-text { background: #1c2128; color: #c9d1d9; }
 html.night-mode .product-tm-item { background: #1c2128; border-color: #30363d; }
 html.night-mode .product-tm-item.tm-active { background: #0d2137; border-color: var(--c-primary); }
 html.night-mode .product-name-input,
