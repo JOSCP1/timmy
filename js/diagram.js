@@ -151,8 +151,12 @@ const Diagram = (() => {
       if (el) {
         if (addToSel) { toggleSelectEl(el.id); }
         else {
-          if (!isSel('element',el.id)) { clearSelection(); pushSel('element',el.id); renderElement(el); showProps(el); }
-          // Build per-element drag offsets for all selected elements
+          // Always clear and re-select so props always show and only this element drags
+          clearSelection();
+          pushSel('element', el.id);
+          renderElement(el);
+          showProps(el);
+          // Build drag offsets for selected elements
           const offsets = {};
           selected.filter(s=>s.type==='element').forEach(s=>{
             const e2=elements.find(x=>x.id===s.id); if(e2) offsets[s.id]={ox:p.x-e2.x,oy:p.y-e2.y};
@@ -261,7 +265,14 @@ const Diagram = (() => {
 
   function onDblClick(e) {
     const p=svgPt(e),el=hitElement(p.x,p.y);
-    if(el){const n=prompt('Element name:',el.name);if(n!==null){el.name=n.trim()||el.name;renderElement(el);Assets.refresh();}}
+    if(el){
+      selectElement(el.id);
+      setTimeout(()=>{
+        const inp=document.querySelector('#propsContent input[type="text"]');
+        if(inp){inp.select();inp.focus();}
+      },50);
+      e.preventDefault();
+    }
   }
 
   function addElement(data) {
