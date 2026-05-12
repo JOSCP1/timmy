@@ -3,6 +3,8 @@
 const App = (() => {
   let toastTimer    = null;
   let autosaveTimer = null;
+  let _dirty        = false;
+  let _newAfterSave = false;
 
   function init() {
     Diagram.init();
@@ -38,6 +40,7 @@ const App = (() => {
   }
 
   function autosave() {
+    _dirty = true;
     clearTimeout(autosaveTimer);
     autosaveTimer = setTimeout(saveToStorage, 800);
   }
@@ -101,6 +104,8 @@ const App = (() => {
     a.click(); URL.revokeObjectURL(a.href);
     closeModal();
     toast('Project saved.', 'ok');
+    _dirty = false;
+    if (_newAfterSave) { _newAfterSave = false; _resetAll(); }
   }
 
   function load() { document.getElementById('fileInput').click(); }
@@ -126,11 +131,55 @@ const App = (() => {
         if (data.attackTrees)   AttackTrees.setAll(data.attackTrees);
         if (data.racAssessment) RacAssessment.setAll(data.racAssessment);
         Assets.refresh(); Storage.save(data);
+        _dirty = false;
         toast('Project loaded.', 'ok');
       } catch(err) { toast('Error: ' + err.message, 'error'); }
       e.target.value = '';
     };
     reader.readAsText(file);
+  }
+
+  // ── New Project ───────────────────────────────────────────────────────
+  function newProject() {
+    if (_dirty) {
+      openModal('New Project',
+        '<p style="color:var(--c-text)">The current project has unsaved changes.<br>What would you like to do?</p>',
+        `<button class="btn btn-ghost"    onclick="App.closeModal()">Cancel</button>
+         <button class="btn btn-danger"   onclick="App.discardAndNew()">Discard &amp; New</button>
+         <button class="btn btn-primary"  onclick="App.saveAndNew()">💾 Save &amp; New</button>`
+      );
+    } else {
+      _resetAll();
+    }
+  }
+
+  function saveAndNew() {
+    _newAfterSave = true;
+    closeModal();
+    saveAs();
+  }
+
+  function discardAndNew() {
+    closeModal();
+    _resetAll();
+  }
+
+  function _resetAll() {
+    IDCounter.setData({ tm: 0, v: 0, ai: 0 });
+    const pn   = document.getElementById('projectName');
+    const prod = document.getElementById('productName');
+    if (pn)   pn.value   = '';
+    if (prod) prod.value = '';
+    Diagram.setData({ elements: [], connections: [] });
+    Assets.setOrder([]);
+    Adversal.setAll([]);
+    VulnMgmt.setAll([]);
+    AttackTrees.setAll([]);
+    RacAssessment.setAll([]);
+    saveToStorage();
+    Assets.refresh();
+    _dirty = false;
+    toast('New project created.', 'ok');
   }
 
   function openModal(title, body, footer = '') {
@@ -154,6 +203,7 @@ const App = (() => {
   }
 
   return { init, switchView, autosave, save, saveAs, confirmSaveAs, load, handleFileLoad,
+           newProject, saveAndNew, discardAndNew,
            openModal, closeModal, toast };
 })();
 
