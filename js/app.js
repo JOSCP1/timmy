@@ -175,7 +175,7 @@ const App = (() => {
     Adversal.setAll([]);
     VulnMgmt.setAll([]);
     AttackTrees.setAll([]);
-    RacAssessment.setAll([]);
+    RacAssessment.setAll({ entries: [], wSeq: 0, vSeq: 0 });
     saveToStorage();
     Assets.refresh();
     _dirty = false;
