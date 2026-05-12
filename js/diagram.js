@@ -16,6 +16,7 @@ const Diagram = (() => {
   let viewBox    = { x:0, y:0, w:1200, h:700 };
 
   let svg, layerTZ, layerConn, layerEl, layerTemp;
+  let currentSubView = 'dfd';
 
   function init() {
     svg       = document.getElementById('diagramSvg');
@@ -280,7 +281,10 @@ const Diagram = (() => {
   }
 
   function addElement(data) {
-    const el={ id:'el_'+(uid++), tmId:IDCounter.nextTM(), ...data };
+    const el={ id:'el_'+(uid++), tmId:IDCounter.nextTM(),
+      directPatientHarm:false, isEntryPoint:false,
+      patchability:'Unknown', updateability:'Unknown',
+      ...data };
     elements.push(el); renderElement(el); selectElement(el.id); Assets.refresh(); App.autosave();
     setTool('select');
   }
@@ -572,6 +576,28 @@ const Diagram = (() => {
       </div>`;
   }
 
+  function fdaSection(el) {
+    const cb = (key, label) =>
+      `<label class="checkbox-label"><input type="checkbox" ${el[key]?'checked':''}
+        onchange="Diagram.updateProp('${el.id}','${key}',this.checked)"> ${label}</label>`;
+    const pSel = (key, val) => {
+      const opts = ['Unknown','Yes','Partial','No'].map(o =>
+        `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+      return `<select onchange="Diagram.updateProp('${el.id}','${key}',this.value)">${opts}</select>`;
+    };
+    return `
+      <div class="props-section-title">FDA / Safety</div>
+      <div class="props-field">
+        <label>Patient Harm</label>
+        <div class="checkbox-stack">
+          ${cb('directPatientHarm','Direct Patient Harm')}
+          ${cb('isEntryPoint','Attack Entry Point')}
+        </div>
+      </div>
+      <div class="props-field"><label>Patchability</label>${pSel('patchability', el.patchability||'Unknown')}</div>
+      <div class="props-field"><label>Updateability</label>${pSel('updateability', el.updateability||'Unknown')}</div>`;
+  }
+
   function interfacesSection(el) {
     const rows = (el.interfaces||[]).map((v,i) => `
       <div class="list-row">
@@ -635,12 +661,13 @@ const Diagram = (() => {
       : el.type==='store'||el.type==='cylinder'   ? encryptionSection(el)
       : '';
     const common = el.type==='trustzone' ? '' : classificationSection(el);
+    const fda    = el.type==='trustzone' ? '' : fdaSection(el);
     pc.innerHTML=`
       ${propsField('ID',`<input type="text" value="${esc(el.tmId||'')}" ${disabled}/>`)}
       ${propsField('Name',`<input type="text" value="${esc(el.name)}"
         onchange="Diagram.updateProp('${el.id}','name',this.value)" />`)}
       ${propsField('Type',`<input type="text" value="${el.type}" ${disabled}/>`)}
-      ${cia}${typeSpecific}${common}
+      ${cia}${typeSpecific}${common}${fda}
       <div class="props-field" style="margin-top:8px">
         <button class="btn btn-danger btn-sm" onclick="Diagram.deleteSelected()">🗑 Delete</button></div>`;
   }
@@ -770,6 +797,8 @@ const Diagram = (() => {
       annotation:'', isSystemAsset:false, isSupportingAsset:false, isHealthcareAsset:false,
       interfaces:[], services:[], authentication:'',
       encrypted:false, encryptionAlgorithm:'AES-256', encryptionOther:'',
+      directPatientHarm:false, isEntryPoint:false,
+      patchability:'Unknown', updateability:'Unknown',
       ...el, tmId: el.tmId || IDCounter.nextTM(),
     }));
     connections = (d.connections||[]).map(c => ({
@@ -796,9 +825,123 @@ const Diagram = (() => {
     else if(connections.find(c=>c.id===id)) selectConn(id);
   }
 
+  // ── Sub-view switching ────────────────────────────────────────────────
+  function switchSubView(name) {
+    currentSubView = name;
+    document.querySelectorAll('.diagram-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.view === name));
+    ['dfd','harm','patch'].forEach(v => {
+      const el = document.getElementById('subview-'+v);
+      if (el) el.style.display = v === name ? '' : 'none';
+    });
+    if (name === 'harm' || name === 'patch') renderStaticView(name);
+  }
+
+  // ── Static read-only view renderer (harm / patch) ─────────────────────
+  function renderStaticView(mode) {
+    const sv = document.getElementById(mode==='harm' ? 'harmSvg' : 'patchSvg');
+    if (!sv) return;
+    sv.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+
+    const tzL  = sv.querySelector('.sv-tz');
+    const cnL  = sv.querySelector('.sv-conn');
+    const elL  = sv.querySelector('.sv-el');
+    tzL.innerHTML = ''; cnL.innerHTML = ''; elL.innerHTML = '';
+
+    function clr(el) {
+      if (mode === 'harm') {
+        if (el.directPatientHarm) return {fill:'#fecaca',stroke:'#ef4444',lbl:'#7f1d1d'};
+        if (el.isEntryPoint)      return {fill:'#dbeafe',stroke:'#3b82f6',lbl:'#1e3a8a'};
+        return {fill:'#f8fafc',stroke:'#94a3b8',lbl:'#475569'};
+      }
+      const p = el.patchability||'Unknown', u = el.updateability||'Unknown';
+      if (p==='No'||u==='No')           return {fill:'#fecaca',stroke:'#ef4444',lbl:'#7f1d1d'};
+      if (p==='Partial'||u==='Partial') return {fill:'#fed7aa',stroke:'#f97316',lbl:'#7c2d12'};
+      if (p==='Yes'&&u==='Yes')         return {fill:'#dcfce7',stroke:'#22c55e',lbl:'#14532d'};
+      return {fill:'#f8fafc',stroke:'#94a3b8',lbl:'#475569'};
+    }
+
+    function txt(parent, x, y, t, opts={}) {
+      const n = makeSVG('text',{x,y,'text-anchor':opts.anchor||'middle',
+        'dominant-baseline':opts.base||'middle','font-size':opts.sz||12,
+        fill:opts.fill||'#1e293b','pointer-events':'none','user-select':'none'});
+      n.textContent = t.length>22 ? t.slice(0,20)+'…' : t;
+      parent.appendChild(n);
+    }
+
+    // Trust zones (back)
+    elements.filter(e=>e.type==='trustzone').forEach(el=>{
+      const g=makeSVG('g',{});
+      g.appendChild(makeSVG('rect',{x:el.x,y:el.y,width:el.w,height:el.h,
+        fill:'rgba(100,116,139,0.06)',stroke:'#94a3b8',
+        'stroke-width':1.5,'stroke-dasharray':'6 3',rx:4}));
+      const lb=makeSVG('text',{x:el.x+8,y:el.y+14,'text-anchor':'start',
+        'font-size':11,fill:'#94a3b8','font-weight':600,'pointer-events':'none'});
+      lb.textContent=el.name; g.appendChild(lb); tzL.appendChild(g);
+    });
+
+    // Connections
+    connections.forEach(c=>{
+      const se=elements.find(e=>e.id===c.src), te=elements.find(e=>e.id===c.tgt);
+      if(!se||!te) return;
+      const sp=edgePoint(se,te.x,te.y), tp=edgePoint(te,se.x,se.y);
+      const suffix = mode==='harm'?'harm':'patch';
+      cnL.appendChild(makeSVG('line',{x1:sp.x,y1:sp.y,x2:tp.x,y2:tp.y,
+        stroke:'#94a3b8','stroke-width':1.5,'marker-end':`url(#sv-arrow-${suffix})`}));
+      const lb=makeSVG('text',{x:(sp.x+tp.x)/2,y:(sp.y+tp.y)/2-6,'text-anchor':'middle',
+        'font-size':10,fill:'#64748b','pointer-events':'none'});
+      lb.textContent=c.name||''; cnL.appendChild(lb);
+    });
+
+    // Elements
+    elements.filter(e=>e.type!=='trustzone').forEach(el=>{
+      const {fill,stroke,lbl}=clr(el);
+      const g=makeSVG('g',{});
+      if(el.type==='process'){
+        g.appendChild(makeSVG('circle',{cx:el.x,cy:el.y,r:el.r||42,fill,stroke,'stroke-width':2}));
+        txt(g,el.x,el.y,el.name,{fill:lbl});
+      } else if(el.type==='actor'){
+        const [hw,hh]=[el.w/2,el.h/2];
+        const hr=Math.min(hw*0.6,hh*0.28), hcy=el.y-hh+hr;
+        const bt=hcy+hr, bb=el.y+hh*0.25;
+        g.appendChild(makeSVG('circle',{cx:el.x,cy:hcy,r:hr,fill,stroke,'stroke-width':2}));
+        g.appendChild(makeSVG('line',{x1:el.x,y1:bt,x2:el.x,y2:bb,stroke,'stroke-width':2}));
+        g.appendChild(makeSVG('line',{x1:el.x-hw*0.8,y1:el.y-hh*0.25,x2:el.x+hw*0.8,y2:el.y-hh*0.25,stroke,'stroke-width':2}));
+        g.appendChild(makeSVG('line',{x1:el.x,y1:bb,x2:el.x-hw*0.7,y2:el.y+hh,stroke,'stroke-width':2}));
+        g.appendChild(makeSVG('line',{x1:el.x,y1:bb,x2:el.x+hw*0.7,y2:el.y+hh,stroke,'stroke-width':2}));
+        txt(g,el.x,el.y+hh+12,el.name,{fill:lbl,base:'hanging'});
+      } else if(el.type==='cylinder'){
+        const [hw,hh]=[el.w/2,el.h/2], ry=Math.max(7,hh*0.2);
+        g.appendChild(makeSVG('rect',{x:el.x-hw,y:el.y-hh+ry,width:el.w,height:el.h-2*ry,fill,stroke,'stroke-width':2}));
+        g.appendChild(makeSVG('ellipse',{cx:el.x,cy:el.y-hh+ry,rx:hw,ry,fill,stroke,'stroke-width':2}));
+        g.appendChild(makeSVG('ellipse',{cx:el.x,cy:el.y+hh-ry,rx:hw,ry,fill:'none',stroke,'stroke-width':2}));
+        txt(g,el.x,el.y,el.name,{fill:lbl});
+      } else {
+        const [hw,hh]=[el.w/2,el.h/2];
+        g.appendChild(makeSVG('rect',{x:el.x-hw,y:el.y-hh,width:el.w,height:el.h,rx:4,fill,stroke,'stroke-width':2}));
+        if(el.type==='external')
+          g.appendChild(makeSVG('rect',{x:el.x-hw+5,y:el.y-hh+5,width:el.w-10,height:el.h-10,fill:'none',stroke,'stroke-width':1}));
+        txt(g,el.x,el.y,el.name,{fill:lbl});
+      }
+      // Badge
+      const topY = el.type==='process' ? el.y-(el.r||42)-6 : el.y-(el.h/2||30)-6;
+      if(mode==='harm'){
+        if(el.directPatientHarm){const b=makeSVG('text',{x:el.x,y:topY,'text-anchor':'middle','font-size':9,fill:'#ef4444','pointer-events':'none'});b.textContent='⚠ Direct Harm';g.appendChild(b);}
+        else if(el.isEntryPoint){const b=makeSVG('text',{x:el.x,y:topY,'text-anchor':'middle','font-size':9,fill:'#3b82f6','pointer-events':'none'});b.textContent='⤵ Entry Point';g.appendChild(b);}
+      } else {
+        const p=(el.patchability||'?')[0], u=(el.updateability||'?')[0];
+        const b=makeSVG('text',{x:el.x,y:el.type==='process'?el.y+(el.r||42)+13:el.y+(el.h/2||30)+13,
+          'text-anchor':'middle','font-size':9,fill:'#64748b','pointer-events':'none'});
+        b.textContent=`P:${p} U:${u}`; g.appendChild(b);
+      }
+      elL.appendChild(g);
+    });
+  }
+
   return { init, getData, setData, getAllAssets, getElements, getConnections,
            deleteSelected, updateProp, updateCIA, updateConnProp, updateConnCIA,
            zoomIn, zoomOut, resetView, exportSVG, focusElement,
+           switchSubView, renderStaticView,
            addInterface, updateInterface, removeInterface,
            addService, updateService, removeService };
 })();

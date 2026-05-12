@@ -99,7 +99,14 @@
         </div>
       </div>
 
-      <div class="diagram-workspace">
+      <div class="diagram-tab-bar">
+        <button class="diagram-tab active" data-view="dfd"   onclick="Diagram.switchSubView('dfd')">📊 Data Flow Diagram</button>
+        <button class="diagram-tab"        data-view="harm"  onclick="Diagram.switchSubView('harm')">🏥 Multi-Patient Harm</button>
+        <button class="diagram-tab"        data-view="patch" onclick="Diagram.switchSubView('patch')">🔧 Patchability &amp; Updateability</button>
+      </div>
+
+      <!-- ── DFD sub-view ── -->
+      <div id="subview-dfd" class="diagram-workspace">
         <div class="canvas-wrap" id="canvasWrap">
           <svg id="diagramSvg" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -129,6 +136,51 @@
             <p class="props-hint">Select an element to edit its properties.</p>
           </div>
         </aside>
+      </div><!-- /subview-dfd -->
+
+      <!-- ── Multi-Patient Harm sub-view ── -->
+      <div id="subview-harm" class="diagram-workspace static-workspace" style="display:none">
+        <div class="static-legend">
+          <span class="legend-chip" style="background:#fecaca;border:1.5px solid #ef4444">&#9632;</span> Direct Patient Harm &nbsp;
+          <span class="legend-chip" style="background:#dbeafe;border:1.5px solid #3b82f6">&#9632;</span> Attack Entry Point &nbsp;
+          <span class="legend-chip" style="background:#f8fafc;border:1.5px solid #94a3b8">&#9632;</span> No Direct Harm / Not Entry Point
+          <span style="margin-left:16px;font-size:11px;color:var(--c-muted)">Set classification in Properties panel (select element in Data Flow Diagram view)</span>
+        </div>
+        <div class="canvas-wrap">
+          <svg id="harmSvg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="sv-arrow-harm" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0,10 3.5,0 7" fill="#94a3b8"/>
+              </marker>
+            </defs>
+            <g class="sv-tz"></g>
+            <g class="sv-conn"></g>
+            <g class="sv-el"></g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- ── Patchability sub-view ── -->
+      <div id="subview-patch" class="diagram-workspace static-workspace" style="display:none">
+        <div class="static-legend">
+          <span class="legend-chip" style="background:#dcfce7;border:1.5px solid #22c55e">&#9632;</span> Patchable &amp; Updateable &nbsp;
+          <span class="legend-chip" style="background:#fed7aa;border:1.5px solid #f97316">&#9632;</span> Partial &nbsp;
+          <span class="legend-chip" style="background:#fecaca;border:1.5px solid #ef4444">&#9632;</span> Not Patchable / Not Updateable &nbsp;
+          <span class="legend-chip" style="background:#f8fafc;border:1.5px solid #94a3b8">&#9632;</span> Unknown
+          <span style="margin-left:16px;font-size:11px;color:var(--c-muted)">P = Patchability · U = Updateability</span>
+        </div>
+        <div class="canvas-wrap">
+          <svg id="patchSvg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="sv-arrow-patch" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0,10 3.5,0 7" fill="#94a3b8"/>
+              </marker>
+            </defs>
+            <g class="sv-tz"></g>
+            <g class="sv-conn"></g>
+            <g class="sv-el"></g>
+          </svg>
+        </div>
       </div>
     </section>
 
