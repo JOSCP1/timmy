@@ -246,12 +246,16 @@ const Diagram = (() => {
 
   function onMouseUp(e) {
     if (resizing) { resizing=null; App.autosave(); return; }
-    if (drawingTZ&&tempTZ) {
+    if (drawingTZ && tempTZ) {
       const p=svgPt(e);
       const x=Math.min(drawingTZ.sx,p.x),y=Math.min(drawingTZ.sy,p.y);
       const w=Math.abs(p.x-drawingTZ.sx),h=Math.abs(p.y-drawingTZ.sy);
+      // Clear state BEFORE addElement so setTool→clearTemp inside addElement cannot
+      // leave drawingTZ/tempTZ set, which would cause infinite trust-zone creation.
+      const node=tempTZ;
+      tempTZ=null; drawingTZ=null;
+      if(node.parentNode) node.parentNode.removeChild(node);
       if(w>20&&h>20) addElement({type:'trustzone',x,y,w,h,name:'Trust Zone',cia:{c:'N',i:'N',a:'N'},justificationC:'',justificationI:'',justificationA:'',justification:''});
-      layerTemp.removeChild(tempTZ); tempTZ=null; drawingTZ=null;
     }
     dragging=null; panState=null;
   }
@@ -757,7 +761,7 @@ const Diagram = (() => {
     for(const [k,v] of Object.entries(attrs)) el.setAttribute(k,String(v));
     return el;
   }
-  function clearTemp() { layerTemp.innerHTML=''; }
+  function clearTemp() { layerTemp.innerHTML=''; tempTZ=null; drawingTZ=null; }
 
   function getData()  { return { elements, connections, uid }; }
   function setData(d) {
