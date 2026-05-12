@@ -243,6 +243,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
 .chip-actor     { background: #ffe4e6; color: #9f1239; }
 .chip-dataflow  { background: #fef9c3; color: #854d0e; }
 .chip-tz        { background: #fee2e2; color: #b91c1c; }
+.chip-generic   { background: #e0e7ff; color: #3730a3; }
 .chip-h { background: #fee2e2; color: #b91c1c; }
 .chip-m { background: #fef9c3; color: #854d0e; }
 .chip-l { background: #dcfce7; color: #15803d; }

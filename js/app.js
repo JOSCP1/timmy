@@ -52,6 +52,7 @@ const App = (() => {
       idCounters:      IDCounter.getData(),
       diagram:         Diagram.getData(),
       assetOrder:      Assets.getOrder(),
+      manualAssets:    Assets.getManual(),
       vulnerabilities: VulnMgmt.getAll(),
       adversal:        Adversal.getAll(),
       attackTrees:     AttackTrees.getAll(),
@@ -67,7 +68,8 @@ const App = (() => {
     const prod = document.getElementById('productName');
     if (data.productName && prod) prod.value = data.productName;
     if (data.diagram)     Diagram.setData(data.diagram);
-    if (data.assetOrder)  Assets.setOrder(data.assetOrder);
+    if (data.assetOrder)   Assets.setOrder(data.assetOrder);
+    if (data.manualAssets) Assets.setManual(data.manualAssets);
     if (data.adversal)    Adversal.setAll(data.adversal);
     if (data.vulnerabilities) {
       data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
@@ -121,8 +123,9 @@ const App = (() => {
         if (data.projectName) document.getElementById('projectName').value = data.projectName;
         const prod = document.getElementById('productName');
         if (data.productName && prod) prod.value = data.productName;
-        if (data.diagram)     Diagram.setData(data.diagram);
-        if (data.assetOrder)  Assets.setOrder(data.assetOrder);
+        if (data.diagram)      Diagram.setData(data.diagram);
+        if (data.assetOrder)   Assets.setOrder(data.assetOrder);
+        if (data.manualAssets) Assets.setManual(data.manualAssets);
         if (data.adversal)    Adversal.setAll(data.adversal);
         if (data.vulnerabilities) {
           data.vulnerabilities.forEach(v => { v.cvssScore = CVSS4.score(v.cvss); });
@@ -172,6 +175,7 @@ const App = (() => {
     if (prod) prod.value = '';
     Diagram.setData({ elements: [], connections: [] });
     Assets.setOrder([]);
+    Assets.setManual([]);
     Adversal.setAll([]);
     VulnMgmt.setAll([]);
     AttackTrees.setAll([]);
