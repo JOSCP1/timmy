@@ -25,12 +25,14 @@ const Diagram = (() => {
     layerTemp = document.getElementById('layerTemp');
     applyViewBox();
 
-    svg.addEventListener('mousedown',  onMouseDown);
-    svg.addEventListener('mousemove',  onMouseMove);
-    svg.addEventListener('mouseup',    onMouseUp);
-    svg.addEventListener('mouseleave', onMouseUp);
-    svg.addEventListener('wheel',      onWheel, { passive: false });
-    svg.addEventListener('dblclick',   onDblClick);
+    svg.addEventListener('pointerdown',  onMouseDown);
+    svg.addEventListener('pointermove',  onMouseMove);
+    svg.addEventListener('pointerup',    onMouseUp);
+    svg.addEventListener('pointerleave', onMouseUp);
+    svg.addEventListener('pointercancel',onMouseUp);
+    svg.addEventListener('wheel',        onWheel, { passive: false });
+    svg.addEventListener('dblclick',     onDblClick);
+    svg.style.touchAction = 'none';
 
     document.getElementById('toolGroup').addEventListener('click', e => {
       const btn = e.target.closest('.tool-btn');
@@ -265,6 +267,7 @@ const Diagram = (() => {
   function addElement(data) {
     const el={ id:'el_'+(uid++), tmId:IDCounter.nextTM(), ...data };
     elements.push(el); renderElement(el); selectElement(el.id); Assets.refresh(); App.autosave();
+    setTool('select');
   }
   function addConnection(data) {
     const c={ id:'cn_'+(uid++), tmId:IDCounter.nextTM(), ...data };
