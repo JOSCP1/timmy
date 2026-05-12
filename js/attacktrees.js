@@ -124,14 +124,29 @@ const AttackTrees = (() => {
     return { probability, score, impact, level: RISK_LEVEL(score) };
   }
 
+  // Minimum achievable AP score in a subtree (attacker picks easiest branch at each OR).
+  // For AND nodes all children are required so the bottleneck is the max child score.
+  function minSubtreeScore(nodes, nodeId) {
+    const node = nodes.find(n => n.id === nodeId); if (!node) return Infinity;
+    const children = nodes.filter(n => n.parentId === nodeId);
+    const own = calcAttackPotential(node.attackFactors || DEFAULT_FACTORS).score;
+    if (!children.length) return own;
+    const childScores = children.map(c => minSubtreeScore(nodes, c.id));
+    return node.type === 'OR'
+      ? Math.min(...childScores)
+      : Math.max(...childScores);
+  }
+
+  // Critical path = root → lowest-score (easiest) branch at every OR node.
+  // All children are critical at AND nodes (attacker must succeed at all).
   function criticalPath(nodes, nodeId) {
     const node = nodes.find(n => n.id === nodeId); if (!node) return [];
     const children = nodes.filter(n => n.parentId === nodeId);
     if (!children.length) return [nodeId];
     if (node.type === 'OR') {
-      const best = [...children].sort((a, b) =>
-        calcProbability(nodes, b.id) - calcProbability(nodes, a.id))[0];
-      return [nodeId, ...criticalPath(nodes, best.id)];
+      const easiest = [...children].sort((a, b) =>
+        minSubtreeScore(nodes, a.id) - minSubtreeScore(nodes, b.id))[0];
+      return [nodeId, ...criticalPath(nodes, easiest.id)];
     }
     return [nodeId, ...children.flatMap(c => criticalPath(nodes, c.id))];
   }
