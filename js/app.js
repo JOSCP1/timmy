@@ -11,6 +11,16 @@ const App = (() => {
     switchView(lastView);
     document.getElementById('projectName')?.addEventListener('input', autosave);
     document.getElementById('productName')?.addEventListener('input', autosave);
+    _dismissSplash();
+  }
+
+  function _dismissSplash() {
+    const splash = document.getElementById('splash');
+    if (!splash) return;
+    setTimeout(() => {
+      splash.classList.add('splash-fade');
+      splash.addEventListener('transitionend', () => splash.remove(), { once: true });
+    }, 2000);
   }
 
   function switchView(name) {

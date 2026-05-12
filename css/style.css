@@ -25,6 +25,19 @@ html { overflow-x: hidden; }
 body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
        background: var(--c-bg); color: var(--c-text); height: 100vh; overflow: hidden; }
 
+/* ═══ SPLASH ════════════════════════════════════════════════════════════ */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0f172a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  transition: opacity .5s ease;
+}
+#splash.splash-fade { opacity: 0; pointer-events: none; }
+.splash-logo  { height: 180px; width: auto; }
+.splash-title { color: #f1f5f9; font-size: 42px; font-weight: 700; letter-spacing: 2px; }
+.splash-sub   { color: #94a3b8; font-size: 15px; letter-spacing: .5px; }
+.splash-version { color: #3b82f6; font-size: 13px; font-weight: 600; margin-top: 8px; }
+
 /* ═══ LAYOUT ════════════════════════════════════════════════════════════ */
 .app-header {
   height: 52px; background: var(--c-header); display: flex; align-items: center;
