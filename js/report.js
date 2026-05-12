@@ -50,21 +50,21 @@ const Report = (() => {
     </vulnerability>`).join('\n');
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<olysec-report xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-               version="1.0">
+<ostra-report xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              version="1.0">
   <metadata>
     <project-name>${x(project)}</project-name>
     <generated-at>${date}</generated-at>
-    <tool>OLYSEC v1.0.0</tool>
+    <tool>OSTRA – Open Source Threat Modeling &amp; Risk Analysis</tool>
     <total-vulnerabilities>${vulns.length}</total-vulnerabilities>
     <open>${vulns.filter(v=>v.status==='Open').length}</open>
     <mitigated>${vulns.filter(v=>v.status==='Mitigated').length}</mitigated>
   </metadata>
   <vulnerabilities>${items}
   </vulnerabilities>
-</olysec-report>`;
+</ostra-report>`;
 
-    download(xml, `olysec-report-${project.replace(/\s+/g,'_')}-${Date.now()}.xml`, 'application/xml');
+    download(xml, `ostra-report-${project.replace(/\s+/g,'_')}-${Date.now()}.xml`, 'application/xml');
     App.toast('✅ XML report exported.', 'ok');
   }
 

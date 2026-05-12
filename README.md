@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="images/timmy.png" alt="Timmy – The Humpback Whale" width="260" />
+  <img src="images/OSTRA.png" alt="OSTRA" width="260" />
 </p>
 
-<h1 align="center">Timmy</h1>
-<p align="center"><em>Threat Modeling &amp; Product Security Risk Management</em></p>
+<h1 align="center">OSTRA</h1>
+<p align="center"><em>Open Source Threat Modeling &amp; Risk Analysis</em></p>
 <p align="center">
   <img src="https://img.shields.io/badge/license-Apache%202.0-blue" />
   <img src="https://img.shields.io/badge/CVSS-4.0-red" />
@@ -68,7 +68,7 @@ No installation, no build step, no dependencies.
 
 ### Option 2 — Serve with Node.js (optional)
 
-Useful if you need to access Timmy over a network or avoid browser file-protocol restrictions.
+Useful if you need to access OSTRA over a network or avoid browser file-protocol restrictions.
 
 ```bash
 npm install      # installs Express (only dependency)
@@ -98,7 +98,7 @@ npm run watch        # watch mode
 ## 🗂️ Project Structure
 
 ```
-timmy/
+ostra/
 ├── src/                    # TypeScript source (source of truth)
 │   ├── types.ts            # All shared interfaces and type declarations
 │   ├── storage.ts          # localStorage persistence + ID counters
@@ -116,7 +116,7 @@ timmy/
 ├── css/
 │   └── style.css           # All styles including night mode
 ├── images/
-│   └── timmy.png           # Application logo
+│   └── OSTRA.png           # Application logo
 ├── index.html              # Single-page application (open directly)
 ├── server.js               # Optional Express static server
 ├── tsconfig.json           # TypeScript compiler configuration

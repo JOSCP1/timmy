@@ -64,7 +64,7 @@ const App: AppModule = (() => {
   function save(): void { saveAs(); }
 
   function saveAs(): void {
-    const defaultName = (document.getElementById('projectName') as HTMLInputElement|null)?.value || 'timmy-project';
+    const defaultName = (document.getElementById('projectName') as HTMLInputElement|null)?.value || 'ostra-project';
     openModal('Save Project', `
       <div class="form-field">
         <label>Filename</label>
@@ -81,7 +81,7 @@ const App: AppModule = (() => {
   function confirmSaveAs(): void {
     saveToStorage();
     const data = Storage.load();
-    const name = ((document.getElementById('saveAsName') as HTMLInputElement|null)?.value || 'timmy-project')
+    const name = ((document.getElementById('saveAsName') as HTMLInputElement|null)?.value || 'ostra-project')
       .replace(/[^a-zA-Z0-9_\-]/g,'_').replace(/\.json$/i,'');
     const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
     const a    = document.createElement('a');

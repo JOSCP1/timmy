@@ -1,7 +1,7 @@
 {
-  "name": "timmy",
+  "name": "ostra",
   "version": "0.5.1",
-  "description": "Timmy – Threat Modeling & Product Security Risk Management",
+  "description": "OSTRA – Open Source Threat Modeling & Risk Analysis",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

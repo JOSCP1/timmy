@@ -28,23 +28,23 @@ const Report: ReportModule = (() => {
     </vulnerability>`).join('\n');
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<timmy-report version="1.0">
+<ostra-report version="1.0">
   <metadata>
     <project-name>${x(project)}</project-name>
     <generated-at>${new Date().toISOString()}</generated-at>
-    <tool>Timmy v0.5</tool>
+    <tool>OSTRA – Open Source Threat Modeling &amp; Risk Analysis</tool>
     <total>${vulns.length}</total>
     <open>${vulns.filter(v=>v.status==='Open').length}</open>
     <mitigated>${vulns.filter(v=>v.status==='Mitigated').length}</mitigated>
   </metadata>
   <vulnerabilities>${items}
   </vulnerabilities>
-</timmy-report>`;
+</ostra-report>`;
 
     const blob = new Blob([xml], { type:'application/xml' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `timmy-report-${project.replace(/\s+/g,'_')}-${Date.now()}.xml`;
+    a.download = `ostra-report-${project.replace(/\s+/g,'_')}-${Date.now()}.xml`;
     a.click(); URL.revokeObjectURL(a.href);
     App.toast('✅ XML report exported.', 'ok');
     Audit.log('export_xml', { project });

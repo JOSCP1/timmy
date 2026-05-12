@@ -68,7 +68,7 @@ const App = (() => {
   // ── Save As dialog ────────────────────────────────────────────────────
   function save()   { saveAs(); }
   function saveAs() {
-    const defaultName = (document.getElementById('projectName')?.value || 'timmy-project').replace(/\s+/g,'_');
+    const defaultName = (document.getElementById('projectName')?.value || 'ostra-project').replace(/\s+/g,'_');
     openModal('Save Project', `
       <div class="form-field">
         <label>Filename</label>
@@ -82,7 +82,7 @@ const App = (() => {
   function confirmSaveAs() {
     saveToStorage();
     const data = Storage.load();
-    const name = (document.getElementById('saveAsName')?.value || 'timmy-project')
+    const name = (document.getElementById('saveAsName')?.value || 'ostra-project')
       .replace(/[^a-zA-Z0-9_\-]/g,'_').replace(/\.json$/i,'');
     const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
     const a    = document.createElement('a');
